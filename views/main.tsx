@@ -1,0 +1,134 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { AppShell } from "@/components/layout/app-shell";
+import { WelcomeDialog } from "@/components/welcome-dialog";
+import { SettingsDrawer } from "@/components/settings-drawer";
+import { LogsDrawer } from "@/components/logs-drawer";
+import { HydrationDashboard } from "@/components/hydration-dashboard/hydration-dashboard";
+import { useHydration } from "@/hooks/useHydration";
+import { useHydrationHotkeys } from "@/hooks/useHotkeys";
+import { useShortcutHint } from "@/components/shortcut-hint/shortcut-hint";
+import { getUserData } from "@/lib/storage";
+import { toast } from "sonner";
+
+export function MainPage() {
+  const {
+    data,
+    addWater,
+    setDailyGoal,
+    deleteLog,
+    updateSettings,
+    refetch,
+    streakHistory,
+    weeklyHistory,
+    currentStreak,
+    longestStreak,
+  } = useHydration();
+
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [logsDrawerOpen, setLogsDrawerOpen] = useState(false);
+  const [isRefreshingAfterSettings, setIsRefreshingAfterSettings] = useState(false);
+
+  const showWelcome = () => {
+    const stored = getUserData();
+    const hasName = stored?.name?.trim();
+    if (!hasName) setWelcomeOpen(true);
+  };
+
+  useEffect(() => {
+    showWelcome();
+  }, []);
+
+  const { showHint } = useShortcutHint();
+  useHydrationHotkeys({
+    onAddWater: () => {
+      addWater(250);
+      toast.success("Added 250 ml");
+    },
+    onChangeGoal: () => setLogsDrawerOpen(true),
+    onOpenSettings: () => setSettingsOpen(true),
+    onCustomEntry: () => {
+      const amount = prompt("Amount (ml):");
+      if (amount) {
+        const n = parseInt(amount, 10);
+        if (!Number.isNaN(n) && n > 0) {
+          addWater(n);
+          toast.success(`Added ${n} ml`);
+        }
+      }
+    },
+    onShortcutUsed: showHint,
+    enabled: !!data && !welcomeOpen,
+  });
+
+  return (
+    <>
+      <AppShell
+        userData={data}
+        onOpenSettings={() => setSettingsOpen(true)}
+      >
+        {data ? (
+          <HydrationDashboard
+            data={data}
+            addWater={(amount, _time?, drinkType?) => {
+              addWater(amount, undefined, drinkType);
+              toast.success(`Added ${amount} ml`);
+            }}
+            setDailyGoal={setDailyGoal}
+            onOpenLogsDrawer={() => setLogsDrawerOpen(true)}
+            streakHistory={streakHistory}
+            weeklyHistory={weeklyHistory}
+            currentStreak={currentStreak}
+            longestStreak={longestStreak}
+            isRefreshing={isRefreshingAfterSettings}
+          />
+        ) : (
+          <div className="flex flex-1 items-center justify-center p-4">
+            <div className="h-8 w-8 animate-pulse rounded bg-muted" />
+          </div>
+        )}
+      </AppShell>
+
+      <WelcomeDialog
+        open={welcomeOpen}
+        onOpenChange={setWelcomeOpen}
+        onComplete={() => {
+          refetch();
+        }}
+      />
+
+      <SettingsDrawer
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        data={data}
+        onSave={(updates) => {
+          updateSettings(updates);
+          setIsRefreshingAfterSettings(true);
+          toast.success("Settings saved");
+          setTimeout(() => setIsRefreshingAfterSettings(false), 800);
+        }}
+        onDataCleared={() => {
+          refetch();
+          setWelcomeOpen(true);
+          toast.success("All data cleared");
+        }}
+      />
+
+      <LogsDrawer
+        open={logsDrawerOpen}
+        onOpenChange={setLogsDrawerOpen}
+        data={data}
+        onDeleteLog={(index) => {
+          deleteLog(index);
+          toast.success("Log removed");
+        }}
+        onSetGoal={(goal) => {
+          setDailyGoal(goal);
+          toast.success("Goal updated");
+        }}
+      />
+    </>
+  );
+}
