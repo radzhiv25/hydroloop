@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hydroloop
 
-## Getting Started
+A minimal, open-source water reminder app. Track daily intake, set goals, and build a hydration habit.
 
-First, run the development server:
+## Features
+
+- **Daily goal** – Set and adjust your daily water target (ml)
+- **Quick add** – Log water, tea, coffee, or custom drinks with one tap
+- **Charts** – Radial (stacked), bar, line, area, and radar views with color palettes
+- **Streaks** – Calendar and streak stats to keep you consistent
+- **Weekly summary** – Progress toward goal by day (M–S)
+- **Keyboard shortcuts** – ⌘K (shortcuts), A / G / S / C for add, logs, settings, custom
+- **Settings** – Profile, reminder window, graph type, color palette, clear all data
+
+Data is stored locally in the browser (no account required).
+
+## Tech stack
+
+- [Next.js](https://nextjs.org) (App Router)
+- [React](https://react.dev) 19
+- [Tailwind CSS](https://tailwindcss.com) v4
+- [Recharts](https://recharts.org) for charts
+- [Radix UI](https://radix-ui.com) primitives
+- [Motion](https://motion.dev) for animation
+- [Zod](https://zod.dev) + [React Hook Form](https://react-hook-form.com) for settings
+
+## Prerequisites
+
+- Node.js 20+
+- npm, yarn, pnpm, or bun
+
+## Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/water-reminder.git
+cd water-reminder
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command        | Description              |
+|----------------|--------------------------|
+| `npm run dev`  | Start dev server (3000)  |
+| `npm run build`| Production build         |
+| `npm run start`| Run production server    |
+| `npm run lint` | Run ESLint               |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contributing
 
-## Learn More
+Contributions are welcome. Please open an issue to discuss larger changes, or a PR for small fixes and features.
 
-To learn more about Next.js, take a look at the following resources:
+1. Fork the repo
+2. Create a branch (`git checkout -b feat/your-feature`)
+3. Commit with conventional messages (`feat:`, `fix:`, `docs:`, `chore:`, `style:`)
+4. Push and open a Pull Request
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
