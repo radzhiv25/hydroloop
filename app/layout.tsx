@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ShortcutHintProvider } from "@/components/shortcut-hint/shortcut-hint";
 
 const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
@@ -41,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-mono", jetbrainsMono.variable)}>
+    <html lang="en" className={cn("font-mono", jetbrainsMono.variable)} suppressHydrationWarning>
       <body
         className={cn(
           geistSans.variable,
@@ -51,14 +52,16 @@ export default function RootLayout({
           "antialiased"
         )}
       >
-        <TooltipProvider>
-          <ShortcutHintProvider>
-            <div className="mx-auto flex min-h-screen w-full flex-col md:max-w-[50vw]">
-              {children}
-            </div>
-            <Toaster />
-          </ShortcutHintProvider>
-        </TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <ShortcutHintProvider>
+              <div className="mx-auto flex min-h-screen w-full flex-col md:max-w-[50vw]">
+                {children}
+              </div>
+              <Toaster />
+            </ShortcutHintProvider>
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

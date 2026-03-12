@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Settings, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { UserData } from "@/lib/types";
 
 type NavbarProps = {
@@ -42,6 +43,7 @@ export function Navbar({ userData, onOpenSettings }: NavbarProps) {
             <User className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
+        <ThemeToggle />
         <KeyboardShortcuts />
         <Tooltip>
           <TooltipTrigger asChild>
