@@ -7,6 +7,8 @@ import {
   DEFAULT_DAILY_GOAL,
   DEFAULT_TIME_SPAN,
   DEFAULT_REMINDER_INTERVAL,
+  DEFAULT_REMINDER_SOUND,
+  DEFAULT_REMINDER_SOUND_DURATION,
   DEFAULT_CHART_TYPE,
   DEFAULT_COLOR_PALETTE,
 } from "@/constants/hydration";
@@ -32,6 +34,8 @@ function createDefaultData(date: string): UserData {
     name: "",
     profileImage: "",
     reminder_interval: DEFAULT_REMINDER_INTERVAL,
+    reminder_sound: DEFAULT_REMINDER_SOUND,
+    reminder_sound_duration_seconds: DEFAULT_REMINDER_SOUND_DURATION,
     time_span: { ...DEFAULT_TIME_SPAN },
     daily_goal: DEFAULT_DAILY_GOAL,
     water_consumed: 0,

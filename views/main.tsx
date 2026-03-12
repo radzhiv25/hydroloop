@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/app-shell";
 import { WelcomeDialog } from "@/components/welcome-dialog";
-import { SettingsDrawer } from "@/components/settings-drawer";
+import { SettingsSidebar } from "@/components/settings-sidebar";
 import { LogsDrawer } from "@/components/logs-drawer";
 import { HydrationDashboard } from "@/components/hydration-dashboard/hydration-dashboard";
 import { useHydration } from "@/hooks/useHydration";
 import { useHydrationHotkeys } from "@/hooks/useHotkeys";
+import { useReminder } from "@/hooks/useReminder";
 import { useShortcutHint } from "@/components/shortcut-hint/shortcut-hint";
 import { getUserData } from "@/lib/storage";
 import { toast } from "sonner";
@@ -44,6 +45,7 @@ export function MainPage() {
 
   const { setTheme, resolvedTheme } = useTheme();
   const { showHint } = useShortcutHint();
+  useReminder(data);
 
   useEffect(() => {
     const handleThemeKey = (e: KeyboardEvent) => {
@@ -61,8 +63,8 @@ export function MainPage() {
       addWater(250);
       toast.success("Added 250 ml");
     },
-    onChangeGoal: () => setLogsDrawerOpen(true),
-    onOpenSettings: () => setSettingsOpen(true),
+    onChangeGoal: () => setLogsDrawerOpen((prev) => !prev),
+    onOpenSettings: () => setSettingsOpen((prev) => !prev),
     onCustomEntry: () => {
       const amount = prompt("Amount (ml):");
       if (amount) {
@@ -81,39 +83,33 @@ export function MainPage() {
     <>
       <AppShell
         userData={data}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={() => setSettingsOpen((prev) => !prev)}
+        settingsOpen={settingsOpen}
       >
-        {data ? (
-          <HydrationDashboard
-            data={data}
-            addWater={(amount, _time?, drinkType?) => {
-              addWater(amount, undefined, drinkType);
-              toast.success(`Added ${amount} ml`);
-            }}
-            setDailyGoal={setDailyGoal}
-            onOpenLogsDrawer={() => setLogsDrawerOpen(true)}
-            streakHistory={streakHistory}
-            weeklyHistory={weeklyHistory}
-            currentStreak={currentStreak}
-            longestStreak={longestStreak}
-            isRefreshing={isRefreshingAfterSettings}
-          />
-        ) : (
-          <div className="flex flex-1 items-center justify-center p-4">
-            <div className="h-8 w-8 animate-pulse rounded bg-muted" />
-          </div>
-        )}
-      </AppShell>
+        <div className="min-w-0 flex-1 flex flex-col">
+          {data ? (
+            <HydrationDashboard
+              data={data}
+              addWater={(amount, _time?, drinkType?) => {
+                addWater(amount, undefined, drinkType);
+                toast.success(`Added ${amount} ml`);
+              }}
+              setDailyGoal={setDailyGoal}
+              onOpenLogsDrawer={() => setLogsDrawerOpen(true)}
+              streakHistory={streakHistory}
+              weeklyHistory={weeklyHistory}
+              currentStreak={currentStreak}
+              longestStreak={longestStreak}
+              isRefreshing={isRefreshingAfterSettings}
+            />
+          ) : (
+            <div className="flex flex-1 items-center justify-center p-4">
+              <div className="h-8 w-8 animate-pulse rounded bg-muted" />
+            </div>
+          )}
+        </div>
 
-      <WelcomeDialog
-        open={welcomeOpen}
-        onOpenChange={setWelcomeOpen}
-        onComplete={() => {
-          refetch();
-        }}
-      />
-
-      <SettingsDrawer
+      <SettingsSidebar
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         data={data}
@@ -130,6 +126,15 @@ export function MainPage() {
           refetch();
           setWelcomeOpen(true);
           toast.success("All data cleared");
+        }}
+      />
+      </AppShell>
+
+      <WelcomeDialog
+        open={welcomeOpen}
+        onOpenChange={setWelcomeOpen}
+        onComplete={() => {
+          refetch();
         }}
       />
 

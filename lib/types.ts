@@ -19,10 +19,19 @@ export type TimeSpan = {
 export type ChartType = "line" | "bar" | "area" | "radar" | "radial";
 export type ColorPaletteId = "blue" | "green" | "warm" | "cool" | "violet";
 
+/** Id of the reminder sound file under /sounds (e.g. hydroloop_1). */
+export type ReminderSoundId = string;
+
 export type UserData = {
   name: string;
   profileImage: string;
   reminder_interval: number; // minutes
+  /** Sound file id for reminder alerts (e.g. hydroloop_1), or "custom" when using custom_sound_url. */
+  reminder_sound?: ReminderSoundId;
+  /** CDN URL for custom reminder sound (used when reminder_sound === "custom"). */
+  custom_sound_url?: string;
+  /** How long the reminder sound plays in seconds (loop until duration). */
+  reminder_sound_duration_seconds?: number;
   time_span: TimeSpan;
   daily_goal: number; // ml
   water_consumed: number;

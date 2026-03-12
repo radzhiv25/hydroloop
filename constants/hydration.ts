@@ -23,10 +23,29 @@ export const MIN_DAILY_GOAL = 500;
 export const MAX_DAILY_GOAL = 5000;
 export const GOAL_STEP = 250;
 
-export const QUICK_ADD_AMOUNTS = [100, 250, 500, 1000, 1500, 2000] as const;
+export const QUICK_ADD_AMOUNTS = [100, 250, 500] as const;
+
+/** Preset daily goal values (ml) shown in settings for quick selection. */
+export const DAILY_GOAL_PRESETS = [1000, 1500, 2000, 2500] as const;
 
 export const DEFAULT_TIME_SPAN = { start: "09:00", end: "19:00" } as const;
 export const DEFAULT_REMINDER_INTERVAL = 45;
+
+/** Reminder sound options (files in public/sounds). */
+export const REMINDER_SOUNDS = [
+  { id: "hydroloop_1", label: "Hydroloop 1" },
+  { id: "hydroloop_2", label: "Hydroloop 2" },
+  { id: "hydroloop_3", label: "Hydroloop 3" },
+  { id: "hydroloop_4", label: "Hydroloop 4" },
+  { id: "hydroloop_5", label: "Hydroloop 5" },
+  { id: "hydroloop_special", label: "Hydroloop Special" },
+] as const;
+/** Value for reminder_sound when using a custom (uploaded) sound. */
+export const REMINDER_SOUND_CUSTOM = "custom";
+export const DEFAULT_REMINDER_SOUND = "hydroloop_1";
+export const DEFAULT_REMINDER_SOUND_DURATION = 5;
+export const MIN_REMINDER_SOUND_DURATION = 3;
+export const MAX_REMINDER_SOUND_DURATION = 60;
 
 export const CHART_TYPES = [
   { id: "radial", label: "Stacked radial" },
