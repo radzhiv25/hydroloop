@@ -99,7 +99,10 @@ export function HydrationChart({
   const percentTowardGoal =
     dailyGoal > 0 ? Math.min(100, Math.round((waterConsumed / dailyGoal) * 100)) : 0;
 
-  const colors = getPaletteColors(colorPalette);
+  const baseColors = getPaletteColors(colorPalette);
+  const colors = data?.custom_chart_colors
+    ? { ...baseColors, ...data.custom_chart_colors }
+    : baseColors;
   const getColor = (id: string) => colors[id as keyof typeof colors] ?? colors.other;
 
   const chartData =
@@ -147,11 +150,11 @@ export function HydrationChart({
                       const cx = viewBox.cx ?? 0;
                       const cy = viewBox.cy ?? 0;
                       return (
-                        <text x={cx} y={cy} textAnchor="middle">
+                        <text x={cx} y={cy} textAnchor="middle" className="fill-foreground">
                           <tspan
                             x={cx}
                             y={cy-2}
-                            fill="hsl(0 0% 9%)"
+                            fill="currentColor"
                             fontSize={28}
                             fontWeight="bold"
                           >
@@ -160,7 +163,7 @@ export function HydrationChart({
                           <tspan
                             x={cx}
                             y={cy+12}
-                            fill="hsl(0 0% 45%)"
+                            className="fill-muted-foreground"
                             fontSize={13}
                           >
                             ml consumed
