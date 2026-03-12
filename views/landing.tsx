@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { PRODUCT_NAME } from "@/constants";
+import { GlassWater } from "lucide-react";
+import { PRODUCT_NAME, SPLASH_FROM_LANDING_KEY } from "@/constants";
 import { Hero } from "@/components/hero";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WaterFillCta } from "@/components/water-fill-cta";
@@ -78,7 +79,17 @@ function makeLandingSample() {
 }
 
 export function LandingPage() {
+  const router = useRouter();
   const sample = useMemo(() => makeLandingSample(), []);
+
+  const goToAppWithSplash = () => {
+    try {
+      sessionStorage.setItem(SPLASH_FROM_LANDING_KEY, "1");
+    } catch {
+      // ignore
+    }
+    router.push("/app");
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -100,13 +111,14 @@ export function LandingPage() {
       </div>
 
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="font-semibold text-foreground font-archivo">
+        <span className="flex items-center gap-2 font-semibold text-foreground font-archivo">
+          <GlassWater className="h-5 w-5 shrink-0" />
           {PRODUCT_NAME}
         </span>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button asChild variant="outline" size="sm">
-            <Link href="/app">Open app</Link>
+          <Button variant="outline" size="sm" onClick={goToAppWithSplash}>
+            Open app
           </Button>
         </div>
       </header>
@@ -123,8 +135,12 @@ export function LandingPage() {
             <div className="mx-auto mt-4 flex max-w-xl flex-col items-center gap-2 text-center">
               <div className="flex flex-col items-center gap-2 sm:flex-row">
                 <WaterFillCta className="w-full sm:w-auto" label="Start tracking" />
-                <Button asChild variant="outline" className="w-full sm:w-auto">
-                  <Link href="/app">See dashboard</Link>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={goToAppWithSplash}
+                >
+                  See dashboard
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground font-archivo">

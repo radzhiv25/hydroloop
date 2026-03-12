@@ -6,6 +6,7 @@ import {
   TypographyMuted,
 } from "@/components/ui/typography";
 import { PRODUCT_NAME } from "@/constants";
+import { GlassWater } from "lucide-react";
 import { motion } from "motion/react";
 
 const fadeUp = {
@@ -24,7 +25,8 @@ export function Hero() {
         animate: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
       }}
     >
-      <motion.div variants={fadeUp} transition={{ duration: 0.4 }}>
+      <motion.div variants={fadeUp} transition={{ duration: 0.4 }} className="flex flex-col items-center gap-3">
+        <GlassWater className="h-12 w-12 shrink-0 text-foreground" strokeWidth={1.5} />
         <TypographyH1 className="font-archivo">
           {PRODUCT_NAME}
         </TypographyH1>
