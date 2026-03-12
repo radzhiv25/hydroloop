@@ -1,10 +1,5 @@
-import { SplashGate } from "@/components/splash-gate";
-import { MainPage } from "@/views/main";
+import { LandingPage } from "@/views/landing";
 
 export default function Home() {
-  return (
-    <SplashGate>
-      <MainPage />
-    </SplashGate>
-  );
+  return <LandingPage />;
 }
