@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/app-shell";
 import { WelcomeDialog } from "@/components/welcome-dialog";
 import { SettingsDrawer } from "@/components/settings-drawer";
@@ -41,7 +42,20 @@ export function MainPage() {
     showWelcome();
   }, []);
 
+  const { setTheme, resolvedTheme } = useTheme();
   const { showHint } = useShortcutHint();
+
+  useEffect(() => {
+    const handleThemeKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        setTheme(resolvedTheme === "dark" ? "light" : "dark");
+      }
+    };
+    window.addEventListener("keydown", handleThemeKey);
+    return () => window.removeEventListener("keydown", handleThemeKey);
+  }, [resolvedTheme, setTheme]);
+
   useHydrationHotkeys({
     onAddWater: () => {
       addWater(250);
@@ -108,6 +122,9 @@ export function MainPage() {
           setIsRefreshingAfterSettings(true);
           toast.success("Settings saved");
           setTimeout(() => setIsRefreshingAfterSettings(false), 800);
+        }}
+        onLiveColorUpdate={(updates) => {
+          updateSettings(updates);
         }}
         onDataCleared={() => {
           refetch();

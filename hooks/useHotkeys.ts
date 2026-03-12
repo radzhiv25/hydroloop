@@ -34,20 +34,22 @@ export function useHydrationHotkeys({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const key = e.key.toLowerCase();
+      const mod = e.metaKey || e.ctrlKey;
+      const shift = e.shiftKey;
 
-      if (key === "a" && onAddWater) {
+      if (key === "a" && mod && !shift && onAddWater) {
         e.preventDefault();
         onShortcutUsed?.([modifierSymbol(), "A"]);
         onAddWater();
-      } else if (key === "g" && onChangeGoal) {
+      } else if (key === "g" && mod && !shift && onChangeGoal) {
         e.preventDefault();
         onShortcutUsed?.([modifierSymbol(), "G"]);
         onChangeGoal();
-      } else if (key === "s" && onOpenSettings) {
+      } else if (key === "s" && mod && !shift && onOpenSettings) {
         e.preventDefault();
         onShortcutUsed?.([modifierSymbol(), "S"]);
         onOpenSettings();
-      } else if (key === "c" && onCustomEntry) {
+      } else if (key === "c" && mod && !shift && onCustomEntry) {
         e.preventDefault();
         onShortcutUsed?.([modifierSymbol(), "C"]);
         onCustomEntry();

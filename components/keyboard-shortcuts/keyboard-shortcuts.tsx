@@ -21,10 +21,11 @@ import { useShortcutHint } from "@/components/shortcut-hint/shortcut-hint";
 
 const shortcuts: { keys: string[]; label: string }[] = [
   { keys: ["⌘", "K"], label: "Open this dialog" },
-  { keys: ["⌘","A"], label: "Add water (250 ml)" },
-  { keys: ["⌘","G"], label: "Open logs & goal drawer" },
-  { keys: ["⌘","S"], label: "Open settings drawer" },
-  { keys: ["⌘","C"], label: "Custom water entry" },
+  { keys: ["⌘", "A"], label: "Add water (250 ml)" },
+  { keys: ["⌘", "G"], label: "Open logs & goal drawer" },
+  { keys: ["⌘", "S"], label: "Open settings drawer" },
+  { keys: ["⌘", "C"], label: "Custom water entry" },
+  { keys: ["⌘", "⇧", "T"], label: "Toggle light / dark mode" },
 ];
 
 export function KeyboardShortcuts() {
