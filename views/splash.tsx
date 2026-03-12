@@ -6,7 +6,7 @@ type SplashPageProps = {
 
 export function SplashPage({ onComplete }: SplashPageProps) {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 px-4">
+    <div className="flex flex-1 flex-col items-center justify-center bg-background px-4">
       <Typewriter onComplete={onComplete} />
     </div>
   );

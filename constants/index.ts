@@ -10,5 +10,8 @@ export const SPLASH = {
 export const SPLASH_STORAGE_KEY = "hydroloop_last_splash_at";
 export const SPLASH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 1 day
 
+/** Session key: when set, /app always shows splash as loader (e.g. from landing CTAs). */
+export const SPLASH_FROM_LANDING_KEY = "hydroloop_splash_from_landing";
+
 /** Set to true to always show splash (e.g. for screenshot). No redirect to main. */
 export const SPLASH_SCREENSHOT_MODE = false;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Minus, Plus, Trash2, Volume2, VolumeX } from "lucide-react";
 import { motion } from "motion/react";
 import {
   Drawer,
@@ -19,6 +19,7 @@ import {
   MIN_DAILY_GOAL,
   MAX_DAILY_GOAL,
   GOAL_STEP,
+  DAILY_GOAL_PRESETS,
 } from "@/constants/hydration";
 
 type LogsDrawerProps = {
@@ -38,6 +39,8 @@ export function LogsDrawer({
 }: LogsDrawerProps) {
   const [activeTab, setActiveTab] = useState("logs");
   const [draftGoal, setDraftGoal] = useState(data?.daily_goal ?? 2500);
+  const [goalSoundMuted, setGoalSoundMuted] = useState(false);
+  const goalAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (open && data) setDraftGoal(data.daily_goal);
@@ -61,6 +64,31 @@ export function LogsDrawer({
     onSetGoal(draftGoal);
     onOpenChange(false);
   };
+
+  useEffect(() => {
+    if (!open || activeTab !== "goal" || goalSoundMuted) {
+      if (goalAudioRef.current) {
+        goalAudioRef.current.pause();
+        goalAudioRef.current.currentTime = 0;
+        goalAudioRef.current = null;
+      }
+      return;
+    }
+
+    const audio = new Audio("/sounds/hydroloop_goal_2.mp3");
+    audio.loop = true;
+    audio.volume = 0.6;
+    goalAudioRef.current = audio;
+    audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (goalAudioRef.current === audio) {
+        goalAudioRef.current = null;
+      }
+    };
+  }, [open, activeTab, goalSoundMuted]);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -126,6 +154,36 @@ export function LogsDrawer({
                 <p className="text-center text-xs text-muted-foreground">
                   Set your daily water goal.
                 </p>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted/60"
+                  onClick={() => setGoalSoundMuted((prev) => !prev)}
+                >
+                  {goalSoundMuted ? (
+                    <>
+                      <VolumeX className="h-3.5 w-3.5" />
+                      Mute off
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="h-3.5 w-3.5" />
+                      Mute on
+                    </>
+                  )}
+                </button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {DAILY_GOAL_PRESETS.map((preset) => (
+                    <Button
+                      key={preset}
+                      type="button"
+                      variant={draftGoal === preset ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDraftGoal(preset)}
+                    >
+                      {preset} ml
+                    </Button>
+                  ))}
+                </div>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
@@ -182,22 +240,24 @@ export function LogsDrawer({
                   })}
                 </div>
                 <div
-                  className="mt-4 flex w-full items-end justify-center gap-0.5 rounded-lg bg-muted/50 px-2 py-3"
+                  className="flex w-max items-end justify-center gap-0.5 px-2 py-3"
                   aria-hidden
                 >
-                  {goalBarHeights.map((h, i) => (
+                  {goalBarHeights.map((_, i) => (
                     <motion.div
-                      key={`${draftGoal}-${i}`}
+                      key={i}
                       className="w-1.5 flex-shrink-0 rounded-sm bg-primary"
-                      initial={{ height: 4 }}
-                      animate={{ height: 4 + h * 20 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 200,
-                        damping: 20,
-                        delay: i * 0.02,
+                      initial={false}
+                      animate={{
+                        height: [8, 42, 8],
                       }}
-                      style={{ minHeight: 4 }}
+                      transition={{
+                        duration: 1.4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.06,
+                      }}
+                      style={{ minHeight: 8 }}
                     />
                   ))}
                 </div>
@@ -207,7 +267,7 @@ export function LogsDrawer({
 
           {activeTab === "goal" && (
             <DrawerFooter className="shrink-0 border-t border-border pt-4">
-              <Button onClick={handleSubmitGoal}>Submit</Button>
+              <Button onClick={handleSubmitGoal}>Save</Button>
               <DrawerClose asChild>
                 <Button variant="outline">Cancel</Button>
               </DrawerClose>

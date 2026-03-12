@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
+import { SPLASH_FROM_LANDING_KEY } from "@/constants";
 import { ArrowRight, Droplets } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,13 @@ export function WaterFillCta({
         }}
         onAnimationComplete={() => {
           if (!animating) return;
+          if (href === "/app") {
+            try {
+              sessionStorage.setItem(SPLASH_FROM_LANDING_KEY, "1");
+            } catch {
+              // ignore
+            }
+          }
           router.push(href);
           setTimeout(() => setAnimating(false), 350);
         }}
