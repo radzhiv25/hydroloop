@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { SPLASH_FROM_LANDING_KEY } from "@/constants";
-import { ArrowRight, Droplets } from "lucide-react";
+import { ArrowRight, Droplets, GlassWater } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,7 @@ export function WaterFillCta({
       aria-label={label}
     >
       <span className="relative z-10 flex items-center gap-2">
-        <Droplets className="h-4 w-4" />
+        <GlassWater className="h-4 w-4" />
         {label}
         <ArrowRight className="h-4 w-4 translate-x-0 transition-transform duration-200 group-hover/button:translate-x-0.5" />
       </span>

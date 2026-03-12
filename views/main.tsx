@@ -51,12 +51,13 @@ export function MainPage() {
     const handleThemeKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "t") {
         e.preventDefault();
+        showHint([typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "⌘" : "⌃", "⇧", "T"]);
         setTheme(resolvedTheme === "dark" ? "light" : "dark");
       }
     };
     window.addEventListener("keydown", handleThemeKey);
     return () => window.removeEventListener("keydown", handleThemeKey);
-  }, [resolvedTheme, setTheme]);
+  }, [resolvedTheme, setTheme, showHint]);
 
   useHydrationHotkeys({
     onAddWater: () => {
