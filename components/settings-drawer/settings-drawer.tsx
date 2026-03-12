@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { motion } from "motion/react";
@@ -34,8 +34,18 @@ import {
   COLOR_PALETTES,
   DEFAULT_CHART_TYPE,
   DEFAULT_COLOR_PALETTE,
+  DRINK_TYPES,
 } from "@/constants/hydration";
-import { Trash2 } from "lucide-react";
+import { Trash2, Palette } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ColorPicker } from "@/components/ui/color-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const schema = z.object({
   name: z.string(),
@@ -46,6 +56,10 @@ const schema = z.object({
   daily_goal: z.number().min(MIN_DAILY_GOAL).max(MAX_DAILY_GOAL),
   chart_type: z.enum(["line", "bar", "area", "radar", "radial"]),
   color_palette: z.string(),
+  custom_water: z.string().optional(),
+  custom_tea: z.string().optional(),
+  custom_coffee: z.string().optional(),
+  custom_other: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -55,6 +69,7 @@ type SettingsDrawerProps = {
   onOpenChange: (open: boolean) => void;
   data: UserData | null;
   onSave: (updates: Partial<UserData>) => void;
+  onLiveColorUpdate?: (updates: Partial<UserData>) => void;
   onDataCleared?: () => void;
 };
 
@@ -63,6 +78,7 @@ export function SettingsDrawer({
   onOpenChange,
   data,
   onSave,
+  onLiveColorUpdate,
   onDataCleared,
 }: SettingsDrawerProps) {
   const { register, handleSubmit, setValue, watch, reset } = useForm<FormValues>(
@@ -77,13 +93,50 @@ export function SettingsDrawer({
             daily_goal: data.daily_goal,
             chart_type: data.chart_type ?? DEFAULT_CHART_TYPE,
             color_palette: data.color_palette ?? DEFAULT_COLOR_PALETTE,
+            custom_water: data.custom_chart_colors?.water ?? "",
+            custom_tea: data.custom_chart_colors?.tea ?? "",
+            custom_coffee: data.custom_chart_colors?.coffee ?? "",
+            custom_other: data.custom_chart_colors?.other ?? "",
           }
         : undefined,
     }
   );
 
+  const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const reminderInterval = watch("reminder_interval");
   const dailyGoal = watch("daily_goal");
+  const colorPaletteId = watch("color_palette") ?? DEFAULT_COLOR_PALETTE;
+  const palette = COLOR_PALETTES[colorPaletteId] ?? COLOR_PALETTES.blue;
+  const customWater = watch("custom_water");
+  const customTea = watch("custom_tea");
+  const customCoffee = watch("custom_coffee");
+  const customOther = watch("custom_other");
+  const effectiveColors = {
+    water: customWater?.trim() || palette.water,
+    tea: customTea?.trim() || palette.tea,
+    coffee: customCoffee?.trim() || palette.coffee,
+    other: customOther?.trim() || palette.other,
+  };
+
+  const saveColorUpdates = onLiveColorUpdate ?? onSave;
+  const applyColorLive = useCallback(
+    (overrides?: { color_palette?: string; custom_water?: string; custom_tea?: string; custom_coffee?: string; custom_other?: string }) => {
+      const pal = overrides?.color_palette ?? watch("color_palette") ?? DEFAULT_COLOR_PALETTE;
+      const w = overrides?.custom_water ?? watch("custom_water")?.trim();
+      const t = overrides?.custom_tea ?? watch("custom_tea")?.trim();
+      const c = overrides?.custom_coffee ?? watch("custom_coffee")?.trim();
+      const o = overrides?.custom_other ?? watch("custom_other")?.trim();
+      const custom_chart_colors =
+        w || t || c || o
+          ? { water: w || undefined, tea: t || undefined, coffee: c || undefined, other: o || undefined }
+          : undefined;
+      saveColorUpdates({
+        color_palette: (Object.keys(COLOR_PALETTES).includes(pal) ? pal : DEFAULT_COLOR_PALETTE) as ColorPaletteId,
+        custom_chart_colors,
+      });
+    },
+    [watch, saveColorUpdates]
+  );
 
   useEffect(() => {
     if (open && data) {
@@ -96,6 +149,10 @@ export function SettingsDrawer({
         daily_goal: data.daily_goal,
         chart_type: data.chart_type ?? DEFAULT_CHART_TYPE,
         color_palette: data.color_palette ?? DEFAULT_COLOR_PALETTE,
+        custom_water: data.custom_chart_colors?.water ?? "",
+        custom_tea: data.custom_chart_colors?.tea ?? "",
+        custom_coffee: data.custom_chart_colors?.coffee ?? "",
+        custom_other: data.custom_chart_colors?.other ?? "",
       });
     }
   }, [open, data, reset]);
@@ -104,6 +161,19 @@ export function SettingsDrawer({
     const parsed = schema.safeParse(values);
     if (!parsed.success) return;
     const v = parsed.data;
+    const custom_chart_colors = [
+      v.custom_water?.trim(),
+      v.custom_tea?.trim(),
+      v.custom_coffee?.trim(),
+      v.custom_other?.trim(),
+    ].some(Boolean)
+      ? {
+          water: v.custom_water?.trim() || undefined,
+          tea: v.custom_tea?.trim() || undefined,
+          coffee: v.custom_coffee?.trim() || undefined,
+          other: v.custom_other?.trim() || undefined,
+        }
+      : undefined;
     onSave({
       name: v.name,
       profileImage: v.profileImage,
@@ -114,6 +184,7 @@ export function SettingsDrawer({
       color_palette: (Object.keys(COLOR_PALETTES).includes(v.color_palette)
         ? v.color_palette
         : DEFAULT_COLOR_PALETTE) as ColorPaletteId,
+      custom_chart_colors,
     });
     onOpenChange(false);
   };
@@ -138,6 +209,13 @@ export function SettingsDrawer({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4"
         >
+          <div className="grid gap-2">
+            <Label>Appearance</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Theme</span>
+              <ThemeToggle />
+            </div>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="settings-name">Name</Label>
             <Input id="settings-name" {...register("name")} />
@@ -215,23 +293,110 @@ export function SettingsDrawer({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="settings-color_palette">Color palette</Label>
-            <Select
-              value={watch("color_palette") ?? DEFAULT_COLOR_PALETTE}
-              onValueChange={(v) => setValue("color_palette", v)}
+            <Label>Chart colors</Label>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start gap-2"
+              onClick={() => setColorDialogOpen(true)}
             >
-              <SelectTrigger id="settings-color_palette">
-                <SelectValue placeholder="Color palette" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(COLOR_PALETTES).map((id) => (
-                  <SelectItem key={id} value={id}>
-                    {id.charAt(0).toUpperCase() + id.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Palette className="h-4 w-4" />
+              Customize colors
+            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {DRINK_TYPES.map((t) => (
+                <div key={t.id} className="flex items-center gap-1.5">
+                  <div
+                    className="h-5 w-5 shrink-0 rounded border border-border"
+                    style={{ backgroundColor: effectiveColors[t.id as keyof typeof effectiveColors] }}
+                  />
+                  <span className="text-[10px] text-muted-foreground">{t.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
+          <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
+            <DialogContent className="sm:max-w-sm" showCloseButton>
+              <DialogHeader>
+                <DialogTitle>Chart colors</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="dialog-color_palette">Color palette</Label>
+                  <Select
+                    value={watch("color_palette") ?? DEFAULT_COLOR_PALETTE}
+                    onValueChange={(v) => {
+                      setValue("color_palette", v);
+                      applyColorLive({ color_palette: v });
+                    }}
+                  >
+                    <SelectTrigger id="dialog-color_palette">
+                      <SelectValue placeholder="Color palette" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(COLOR_PALETTES).map((id) => (
+                        <SelectItem key={id} value={id}>
+                          {id.charAt(0).toUpperCase() + id.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Preview</Label>
+                  <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
+                    {DRINK_TYPES.map((t) => (
+                      <div key={t.id} className="flex items-center gap-2">
+                        <div
+                          className="h-8 w-8 shrink-0 rounded-md border border-border"
+                          style={{ backgroundColor: effectiveColors[t.id as keyof typeof effectiveColors] }}
+                        />
+                        <span className="text-xs text-muted-foreground">{t.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Custom colors (optional)</Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    Override with hex (e.g. #3b82f6). Changes apply immediately.
+                  </p>
+                  <div className="grid gap-2">
+                    {DRINK_TYPES.map((t) => {
+                      const key = `custom_${t.id}` as keyof Pick<FormValues, "custom_water" | "custom_tea" | "custom_coffee" | "custom_other">;
+                      const hex = watch(key);
+                      const value = hex?.trim().match(/^#[0-9A-Fa-f]{6}$/) ? hex.trim() : "";
+                      return (
+                        <div key={t.id} className="flex items-center gap-2">
+                          <ColorPicker
+                            color={value || "#94a3b8"}
+                            onChange={(newHex) => {
+                              setValue(key, newHex);
+                              applyColorLive({ [key]: newHex });
+                            }}
+                          />
+                          <Input
+                            className="flex-1 font-mono text-xs"
+                            placeholder={`${t.label} (e.g. #3b82f6)`}
+                            {...register(key, {
+                              onChange: (e) => {
+                                const v = e.target.value.trim();
+                                if (v.match(/^#[0-9A-Fa-f]{6}$/)) applyColorLive({ [key]: v });
+                              },
+                            })}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter showCloseButton={false}>
+                <Button onClick={() => setColorDialogOpen(false)}>Done</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <div className="border-t border-border pt-6">
             <p className="mb-2 text-xs font-medium text-muted-foreground">

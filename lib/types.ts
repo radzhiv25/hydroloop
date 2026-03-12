@@ -34,4 +34,11 @@ export type UserData = {
   chart_type?: ChartType;
   /** Color palette for charts */
   color_palette?: ColorPaletteId;
+  /** Optional custom chart colors (hex/oklch); overrides palette when set */
+  custom_chart_colors?: {
+    water?: string;
+    tea?: string;
+    coffee?: string;
+    other?: string;
+  };
 };
