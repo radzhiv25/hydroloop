@@ -240,6 +240,7 @@ export function LogsDrawer({
                   })}
                 </div>
                 <div
+                  key="goal-wave-bars"
                   className="flex w-max items-end justify-center gap-0.5 px-2 py-3"
                   aria-hidden
                 >
@@ -247,9 +248,9 @@ export function LogsDrawer({
                     <motion.div
                       key={i}
                       className="w-1.5 flex-shrink-0 rounded-sm bg-primary"
-                      initial={false}
+                      initial={{ height: "8px" }}
                       animate={{
-                        height: [8, 42, 8],
+                        height: ["8px", "42px", "8px"],
                       }}
                       transition={{
                         duration: 1.4,
