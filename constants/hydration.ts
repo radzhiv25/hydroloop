@@ -23,7 +23,7 @@ export const MIN_DAILY_GOAL = 500;
 export const MAX_DAILY_GOAL = 5000;
 export const GOAL_STEP = 250;
 
-export const QUICK_ADD_AMOUNTS = [500, 1000, 1500, 2000] as const;
+export const QUICK_ADD_AMOUNTS = [100, 250, 500, 1000, 1500, 2000] as const;
 
 export const DEFAULT_TIME_SPAN = { start: "09:00", end: "19:00" } as const;
 export const DEFAULT_REMINDER_INTERVAL = 45;
