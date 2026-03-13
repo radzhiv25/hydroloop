@@ -1,7 +1,21 @@
 {
-  "name": "water-reminder",
-  "version": "0.1.0",
+  "name": "hydroloop",
+  "version": "1.0.0",
   "private": true,
+  "description": "Stay hydrated while you code - a developer-friendly hydration tracker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radzhiv25/hydroloop.git"
+  },
+  "homepage": "https://github.com/radzhiv25/hydroloop#readme",
+  "bugs": {
+    "url": "https://github.com/radzhiv25/hydroloop/issues"
+  },
+  "author": "radzhiv",
+  "license": "MIT",
+  "workspaces": [
+    "cli"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
