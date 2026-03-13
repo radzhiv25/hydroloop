@@ -1,4 +1,5 @@
 export const PRODUCT_NAME = "Hydroloop";
+export const GITHUB_URL = "https://github.com/radzhiv25/hydroloop";
 
 export const SPLASH = {
   line1: "Welcome to Hydroloop",

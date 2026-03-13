@@ -4,8 +4,8 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ShortcutHintProvider } from "@/components/shortcut-hint/shortcut-hint";
+import { ThemeProvider } from "@/components/shared/theme-provider";
+import { ShortcutHintProvider } from "@/components/dashboard/shortcut-hint/shortcut-hint";
 
 const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
 
