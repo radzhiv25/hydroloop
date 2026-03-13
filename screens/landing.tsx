@@ -3,20 +3,26 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { GlassWater } from "lucide-react";
-import { PRODUCT_NAME, SPLASH_FROM_LANDING_KEY } from "@/constants";
-import { Hero } from "@/components/hero";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { WaterFillCta } from "@/components/water-fill-cta";
+import { GlassWater, Github } from "lucide-react";
+import { PRODUCT_NAME, SPLASH_FROM_LANDING_KEY, GITHUB_URL } from "@/constants";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Hero } from "@/components/landing/hero";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { WaterFillCta } from "@/components/landing/water-fill-cta";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { HydrationChart } from "@/components/hydration-chart/hydration-chart";
-import { QuickAddWater } from "@/components/hydration-controls/quick-add-water";
-import { StreakCalendar } from "@/components/streak-calendar/streak-calendar";
-import { StatsCard } from "@/components/stats-card/stats-card";
-import { KeyboardShortcuts } from "@/components/keyboard-shortcuts/keyboard-shortcuts";
+import { HydrationChart } from "@/components/dashboard/hydration-chart/hydration-chart";
+import { QuickAddWater } from "@/components/dashboard/hydration-controls/quick-add-water";
+import { StreakCalendar } from "@/components/dashboard/streak-calendar/streak-calendar";
+import { StatsCard } from "@/components/dashboard/stats-card/stats-card";
+import { KeyboardShortcuts } from "@/components/dashboard/keyboard-shortcuts/keyboard-shortcuts";
+import { usePlatform } from "@/hooks/usePlatform";
 import type { UserData, WeeklyDaySummary } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 
@@ -81,6 +87,7 @@ function makeLandingSample() {
 export function LandingPage() {
   const router = useRouter();
   const sample = useMemo(() => makeLandingSample(), []);
+  const { modSymbol } = usePlatform();
 
   const goToAppWithSplash = () => {
     try {
@@ -117,6 +124,21 @@ export function LandingPage() {
         </span>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" asChild aria-label="View on GitHub">
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group"
+                >
+                  <Github className="h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-[#6e5494]" />
+                </a>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">GitHub</TooltipContent>
+          </Tooltip>
           <Button variant="outline" size="sm" onClick={goToAppWithSplash}>
             Open app
           </Button>
@@ -192,28 +214,28 @@ export function LandingPage() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-muted-foreground">Add water</span>
                       <KbdGroup className="shrink-0">
-                        <Kbd>⌘</Kbd>
+                        <Kbd>{modSymbol}</Kbd>
                         <Kbd>A</Kbd>
                       </KbdGroup>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-muted-foreground">Custom entry</span>
                       <KbdGroup className="shrink-0">
-                        <Kbd>⌘</Kbd>
+                        <Kbd>{modSymbol}</Kbd>
                         <Kbd>C</Kbd>
                       </KbdGroup>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-muted-foreground">Logs &amp; goal</span>
                       <KbdGroup className="shrink-0">
-                        <Kbd>⌘</Kbd>
+                        <Kbd>{modSymbol}</Kbd>
                         <Kbd>G</Kbd>
                       </KbdGroup>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-muted-foreground">Settings</span>
                       <KbdGroup className="shrink-0">
-                        <Kbd>⌘</Kbd>
+                        <Kbd>{modSymbol}</Kbd>
                         <Kbd>S</Kbd>
                       </KbdGroup>
                     </div>

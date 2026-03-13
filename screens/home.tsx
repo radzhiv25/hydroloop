@@ -1,4 +1,4 @@
-import { Typewriter } from "@/components/typewriter";
+import { Typewriter } from "@/components/landing/typewriter";
 
 export function HomePage() {
   return (

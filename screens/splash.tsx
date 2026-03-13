@@ -1,4 +1,4 @@
-import { Typewriter } from "@/components/typewriter";
+import { Typewriter } from "@/components/landing/typewriter";
 
 type SplashPageProps = {
   onComplete: () => void;

@@ -3,14 +3,15 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { AppShell } from "@/components/layout/app-shell";
-import { WelcomeDialog } from "@/components/welcome-dialog";
-import { SettingsSidebar } from "@/components/settings-sidebar";
-import { LogsDrawer } from "@/components/logs-drawer";
-import { HydrationDashboard } from "@/components/hydration-dashboard/hydration-dashboard";
+import { WelcomeDialog } from "@/components/shared/welcome-dialog";
+import { SettingsSidebar } from "@/components/shared/settings-sidebar";
+import { LogsDrawer } from "@/components/dashboard/logs-drawer";
+import { CustomEntryDialog } from "@/components/dashboard/custom-entry-dialog";
+import { HydrationDashboard } from "@/components/dashboard/hydration-dashboard/hydration-dashboard";
 import { useHydration } from "@/hooks/useHydration";
 import { useHydrationHotkeys } from "@/hooks/useHotkeys";
 import { useReminder } from "@/hooks/useReminder";
-import { useShortcutHint } from "@/components/shortcut-hint/shortcut-hint";
+import { useShortcutHint } from "@/components/dashboard/shortcut-hint/shortcut-hint";
 import { getUserData } from "@/lib/storage";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ export function MainPage() {
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logsDrawerOpen, setLogsDrawerOpen] = useState(false);
+  const [customEntryOpen, setCustomEntryOpen] = useState(false);
   const [isRefreshingAfterSettings, setIsRefreshingAfterSettings] = useState(false);
 
   const showWelcome = () => {
@@ -67,14 +69,7 @@ export function MainPage() {
     onChangeGoal: () => setLogsDrawerOpen((prev) => !prev),
     onOpenSettings: () => setSettingsOpen((prev) => !prev),
     onCustomEntry: () => {
-      const amount = prompt("Amount (ml):");
-      if (amount) {
-        const n = parseInt(amount, 10);
-        if (!Number.isNaN(n) && n > 0) {
-          addWater(n);
-          toast.success(`Added ${n} ml`);
-        }
-      }
+      setCustomEntryOpen(true);
     },
     onShortcutUsed: showHint,
     enabled: !!data && !welcomeOpen,
@@ -150,6 +145,15 @@ export function MainPage() {
         onSetGoal={(goal) => {
           setDailyGoal(goal);
           toast.success("Goal updated");
+        }}
+      />
+
+      <CustomEntryDialog
+        open={customEntryOpen}
+        onOpenChange={setCustomEntryOpen}
+        onSubmit={(amount) => {
+          addWater(amount);
+          toast.success(`Added ${amount} ml`);
         }}
       />
     </>
