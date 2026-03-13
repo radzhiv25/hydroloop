@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { SPLASH } from "@/constants";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { usePlatform } from "@/hooks/usePlatform";
 
 type TypewriterProps = {
   onComplete?: () => void;
@@ -12,6 +15,7 @@ export function Typewriter({ onComplete }: TypewriterProps) {
   const [display1, setDisplay1] = useState("");
   const [display2, setDisplay2] = useState("");
   const [phase, setPhase] = useState<"line1" | "line2" | "done">("line1");
+  const { modSymbol } = usePlatform();
 
   useEffect(() => {
     if (phase === "line1") {
@@ -43,8 +47,13 @@ export function Typewriter({ onComplete }: TypewriterProps) {
   onCompleteRef.current = onComplete;
   useEffect(() => {
     if (phase === "done" && onCompleteRef.current) {
-      onCompleteRef.current();
-      onCompleteRef.current = undefined;
+      const t = setTimeout(() => {
+        if (onCompleteRef.current) {
+          onCompleteRef.current();
+          onCompleteRef.current = undefined;
+        }
+      }, 2000);
+      return () => clearTimeout(t);
     }
   }, [phase]);
 
@@ -58,6 +67,23 @@ export function Typewriter({ onComplete }: TypewriterProps) {
           {display2}
         </p>
       )}
+      <AnimatePresence>
+        {phase === "done" && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground"
+          >
+            <span>Press</span>
+            <KbdGroup>
+              <Kbd>{modSymbol}</Kbd>
+              <Kbd>K</Kbd>
+            </KbdGroup>
+            <span>for shortcuts</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

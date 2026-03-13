@@ -7,7 +7,7 @@ import {
   SPLASH_SCREENSHOT_MODE,
   SPLASH_FROM_LANDING_KEY,
 } from "@/constants";
-import { SplashPage } from "@/views/splash";
+import { SplashPage } from "@/screens/splash";
 
 type SplashGateProps = {
   children: React.ReactNode;

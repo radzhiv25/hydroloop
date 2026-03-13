@@ -1,12 +1,12 @@
 "use client";
 
 import { List } from "lucide-react";
-import { GoalSelector } from "@/components/hydration-controls/goal-selector";
-import { QuickAddWater } from "@/components/hydration-controls/quick-add-water";
-import { HydrationChart } from "@/components/hydration-chart/hydration-chart";
-import { StatsCard } from "@/components/stats-card/stats-card";
-import { StreakCalendar } from "@/components/streak-calendar/streak-calendar";
-import { WeeklySummaryBar } from "@/components/weekly-summary";
+import { GoalSelector } from "@/components/dashboard/hydration-controls/goal-selector";
+import { QuickAddWater } from "@/components/dashboard/hydration-controls/quick-add-water";
+import { HydrationChart } from "@/components/dashboard/hydration-chart/hydration-chart";
+import { StatsCard } from "@/components/dashboard/stats-card/stats-card";
+import { StreakCalendar } from "@/components/dashboard/streak-calendar/streak-calendar";
+import { WeeklySummaryBar } from "@/components/dashboard/weekly-summary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { UserData } from "@/lib/types";

@@ -36,7 +36,7 @@ import {
 import { uploadSoundToCloudinary } from "@/lib/cloudinary";
 import { playReminderSoundForDuration } from "@/hooks/useReminder";
 import { Trash2, Palette, Volume2, X, Upload, Loader2 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
   Dialog,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { SPLASH_FROM_LANDING_KEY } from "@/constants";
-import { ArrowRight, Droplets, GlassWater } from "lucide-react";
+import { ArrowRight, GlassWater } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,11 +21,16 @@ export function WaterFillCta({
 }: WaterFillCtaProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
-  const [animating, setAnimating] = useState(false);
 
   const onClick = () => {
-    if (animating) return;
-    setAnimating(true);
+    if (href === "/app") {
+      try {
+        sessionStorage.setItem(SPLASH_FROM_LANDING_KEY, "1");
+      } catch {
+        // ignore
+      }
+    }
+    router.push(href);
   };
 
   return (
@@ -46,22 +51,10 @@ export function WaterFillCta({
         aria-hidden="true"
         className="absolute inset-0 z-0 origin-left bg-gradient-to-r from-[oklch(0.623_0.214_259.815)] via-[oklch(0.809_0.105_251.813)] to-[oklch(0.85_0.08_252)]"
         initial={{ scaleX: 0 }}
-        animate={animating ? { scaleX: 1 } : hovered ? { scaleX: 1 } : { scaleX: 0 }}
+        animate={hovered ? { scaleX: 1 } : { scaleX: 0 }}
         transition={{
-          duration: animating ? 0.35 : 0.45,
+          duration: 0.3,
           ease: [0.2, 0.8, 0.2, 1],
-        }}
-        onAnimationComplete={() => {
-          if (!animating) return;
-          if (href === "/app") {
-            try {
-              sessionStorage.setItem(SPLASH_FROM_LANDING_KEY, "1");
-            } catch {
-              // ignore
-            }
-          }
-          router.push(href);
-          setTimeout(() => setAnimating(false), 350);
         }}
       />
     </Button>

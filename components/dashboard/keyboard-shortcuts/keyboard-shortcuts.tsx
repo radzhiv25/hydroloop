@@ -17,32 +17,36 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "motion/react";
-import { useShortcutHint } from "@/components/shortcut-hint/shortcut-hint";
+import { useShortcutHint } from "@/components/dashboard/shortcut-hint/shortcut-hint";
+import { usePlatform } from "@/hooks/usePlatform";
 
-const shortcuts: { keys: string[]; label: string }[] = [
-  { keys: ["⌘", "K"], label: "Open this dialog" },
-  { keys: ["⌘", "A"], label: "Add water (250 ml)" },
-  { keys: ["⌘", "G"], label: "Open logs & goal drawer" },
-  { keys: ["⌘", "S"], label: "Open settings drawer" },
-  { keys: ["⌘", "C"], label: "Custom water entry" },
-  { keys: ["⌘", "⇧", "T"], label: "Toggle light / dark mode" },
+const getShortcuts = (mod: string) => [
+  { keys: [mod, "K"], label: "Open this dialog" },
+  { keys: [mod, "A"], label: "Add water (250 ml)" },
+  { keys: [mod, "G"], label: "Open logs & goal drawer" },
+  { keys: [mod, "S"], label: "Open settings drawer" },
+  { keys: [mod, "C"], label: "Custom water entry" },
+  { keys: [mod, "⇧", "T"], label: "Toggle light / dark mode" },
+  { keys: [mod, "⇧", "G"], label: "Open GitHub repository" },
 ];
 
 export function KeyboardShortcuts() {
   const [open, setOpen] = useState(false);
   const { showHint } = useShortcutHint();
+  const { modSymbol } = usePlatform();
+  const shortcuts = getShortcuts(modSymbol);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        showHint(["⌘", "K"]);
+        showHint([modSymbol, "K"]);
         setOpen((prev) => !prev);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showHint]);
+  }, [showHint, modSymbol]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -60,7 +64,7 @@ export function KeyboardShortcuts() {
           </DialogTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="flex items-center gap-1.5">
-          Keyboard shortcuts <Kbd>⌘</Kbd>
+          Keyboard shortcuts <Kbd>{modSymbol}</Kbd>
           <Kbd>K</Kbd>
         </TooltipContent>
       </Tooltip>
