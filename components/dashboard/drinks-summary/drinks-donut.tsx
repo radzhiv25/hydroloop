@@ -1,6 +1,6 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import type { UserData } from "@/lib/types";
 import { DRINK_TYPES } from "@/constants/hydration";
@@ -56,30 +56,28 @@ export function DrinksDonut({ data }: DrinksDonutProps) {
 
       <div className="relative mx-auto h-[200px] w-full max-w-[200px]">
         <ChartContainer config={chartConfig} className="h-full w-full aspect-square">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius="55%"
-                outerRadius="85%"
-                paddingAngle={1}
-                strokeWidth={0}
-              >
-                {chartData.map((entry) => {
-                  const color = DRINK_TYPES.find((t) => t.id === entry.id)?.color ?? "var(--chart-4)";
-                  return <Cell key={entry.id} fill={color} />;
-                })}
-              </Pie>
-              <Tooltip
-                formatter={(value: number) => [`${value} ml`, ""]}
-                contentStyle={{ fontSize: 12 }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius="55%"
+              outerRadius="85%"
+              paddingAngle={1}
+              strokeWidth={0}
+            >
+              {chartData.map((entry) => {
+                const color = DRINK_TYPES.find((t) => t.id === entry.id)?.color ?? "var(--chart-4)";
+                return <Cell key={entry.id} fill={color} />;
+              })}
+            </Pie>
+            <Tooltip
+              formatter={(value: number) => [`${value} ml`, ""]}
+              contentStyle={{ fontSize: 12 }}
+            />
+          </PieChart>
         </ChartContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span className="text-2xl font-bold tabular-nums text-foreground">

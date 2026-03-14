@@ -30,13 +30,19 @@ const getShortcuts = (mod: string) => [
   { keys: [mod, "⇧", "G"], label: "Open GitHub repository" },
 ];
 
-export function KeyboardShortcuts() {
+type KeyboardShortcutsProps = {
+  /** When true, keyboard listener is disabled (for display-only use like landing page) */
+  disabled?: boolean;
+};
+
+export function KeyboardShortcuts({ disabled = false }: KeyboardShortcutsProps) {
   const [open, setOpen] = useState(false);
   const { showHint } = useShortcutHint();
   const { modSymbol } = usePlatform();
   const shortcuts = getShortcuts(modSymbol);
 
   useEffect(() => {
+    if (disabled) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -46,7 +52,7 @@ export function KeyboardShortcuts() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showHint, modSymbol]);
+  }, [showHint, modSymbol, disabled]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

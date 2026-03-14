@@ -1,18 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
-import { GlassWater, Github } from "lucide-react";
-import { PRODUCT_NAME, SPLASH_FROM_LANDING_KEY, GITHUB_URL } from "@/constants";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
+import { Terminal, ArrowRight, Copy, Check } from "lucide-react";
+import { SPLASH_FROM_LANDING_KEY } from "@/constants";
 import { Hero } from "@/components/landing/hero";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { WaterFillCta } from "@/components/landing/water-fill-cta";
+import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +21,76 @@ import { KeyboardShortcuts } from "@/components/dashboard/keyboard-shortcuts/key
 import { usePlatform } from "@/hooks/usePlatform";
 import type { UserData, WeeklyDaySummary } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+
+const INSTALL_COMMAND = "npm i -g hydroloop";
+
+function CliInstallBlock() {
+  const [hovered, setHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyCommand = () => {
+    navigator.clipboard.writeText(INSTALL_COMMAND);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="inline-flex items-center rounded-none border border-zinc-800 bg-zinc-950 p-1 transition-all hover:border-zinc-600">
+      <button
+        onClick={copyCommand}
+        className="group flex items-center gap-2 px-4 py-2 transition-colors hover:bg-zinc-900"
+        title="Copy to clipboard"
+      >
+        <code className="font-mono text-sm text-zinc-100">
+          <span className="text-zinc-500">$</span> {INSTALL_COMMAND}
+        </code>
+        <AnimatePresence mode="wait">
+          {copied ? (
+            <motion.span
+              key="check"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="text-green-400"
+            >
+              <Check className="h-3.5 w-3.5" />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="copy"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-zinc-500 transition-colors group-hover:text-zinc-300"
+            >
+              <Copy className="h-3.5 w-3.5" />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </button>
+      <Link
+        href="/cli"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="relative h-8 overflow-hidden rounded-none bg-zinc-800 px-3 text-sm font-medium text-zinc-100 flex items-center gap-1.5"
+      >
+        <span className="relative z-10 flex items-center gap-1.5">
+          Learn more
+          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200" style={{ transform: hovered ? 'translateX(2px)' : 'translateX(0)' }} />
+        </span>
+        <motion.span
+          aria-hidden="true"
+          className="absolute inset-0 z-0 origin-left bg-gradient-to-r from-[oklch(0.623_0.214_259.815)] via-[oklch(0.809_0.105_251.813)] to-[oklch(0.85_0.08_252)]"
+          initial={{ scaleX: 0 }}
+          animate={hovered ? { scaleX: 1 } : { scaleX: 0 }}
+          transition={{ duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }}
+        />
+      </Link>
+    </div>
+  );
+}
 
 function yyyyMmDd(d: Date) {
   const y = d.getFullYear();
@@ -117,33 +183,7 @@ export function LandingPage() {
         />
       </div>
 
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="flex items-center gap-2 font-semibold text-foreground font-archivo">
-          <GlassWater className="h-5 w-5 shrink-0" />
-          {PRODUCT_NAME}
-        </span>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" asChild aria-label="View on GitHub">
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group"
-                >
-                  <Github className="h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-[#6e5494]" />
-                </a>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">GitHub</TooltipContent>
-          </Tooltip>
-          <Button variant="outline" size="sm" onClick={goToAppWithSplash}>
-            Open app
-          </Button>
-        </div>
-      </header>
+      <Navbar variant="site" onOpenApp={goToAppWithSplash} />
 
       <main className="flex flex-1 flex-col">
         <section className="relative overflow-hidden">
@@ -205,7 +245,7 @@ export function LandingPage() {
                     <p className="text-xs font-medium text-muted-foreground">
                       Keyboard shortcuts
                     </p>
-                    <KeyboardShortcuts />
+                    <KeyboardShortcuts disabled />
                   </div>
 
                   <Separator />
@@ -290,6 +330,24 @@ export function LandingPage() {
                 <QuickAddWater onAdd={() => {}} />
               </CardContent>
             </Card>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+              <Terminal className="h-3.5 w-3.5" />
+              For terminal lovers
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight font-archivo sm:text-3xl">
+              Hydroloop CLI
+            </h2>
+            <p className="max-w-lg text-muted-foreground">
+              Track hydration without leaving your terminal. Quick logging,
+              background reminders with sound, and streak tracking — all from
+              the command line.
+            </p>
+            <CliInstallBlock />
           </div>
         </section>
       </main>

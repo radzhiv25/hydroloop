@@ -193,9 +193,7 @@ export function SettingsSidebar({
   }, [open, data, reset]);
 
   const onSubmit = (values: FormValues) => {
-    const parsed = schema.safeParse(values);
-    if (!parsed.success) return;
-    const v = parsed.data;
+    const v = values;
     const custom_chart_colors = [
       v.custom_water?.trim(),
       v.custom_tea?.trim(),
@@ -209,6 +207,11 @@ export function SettingsSidebar({
           other: v.custom_other?.trim() || undefined,
         }
       : undefined;
+    const validChartTypes = ["line", "bar", "area", "radar", "radial"] as const;
+    const chartType = validChartTypes.includes(v.chart_type as typeof validChartTypes[number])
+      ? v.chart_type
+      : DEFAULT_CHART_TYPE;
+
     onSave({
       name: v.name,
       profileImage: v.profileImage,
@@ -218,7 +221,7 @@ export function SettingsSidebar({
       reminder_sound_duration_seconds: v.reminder_sound_duration_seconds ?? DEFAULT_REMINDER_SOUND_DURATION,
       time_span: { start: v.time_start, end: v.time_end },
       daily_goal: v.daily_goal,
-      chart_type: v.chart_type,
+      chart_type: chartType,
       color_palette: (Object.keys(COLOR_PALETTES).includes(v.color_palette)
         ? v.color_palette
         : DEFAULT_COLOR_PALETTE) as ColorPaletteId,
@@ -311,7 +314,7 @@ export function SettingsSidebar({
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
                   {REMINDER_SOUNDS.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
+                    <SelectItem key={s.id} value={s.id} className="rounded-none">
                       {s.label}
                     </SelectItem>
                   ))}
@@ -442,12 +445,12 @@ export function SettingsSidebar({
               value={watch("chart_type") ?? DEFAULT_CHART_TYPE}
               onValueChange={(v) => setValue("chart_type", v as FormValues["chart_type"])}
             >
-              <SelectTrigger id="settings-chart_type">
+              <SelectTrigger id="settings-chart_type" className="rounded-none">
                 <SelectValue placeholder="Graph type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-none">
                 {CHART_TYPES.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
+                  <SelectItem key={t.id} value={t.id} className="rounded-none">
                     {t.label}
                   </SelectItem>
                 ))}
@@ -469,7 +472,7 @@ export function SettingsSidebar({
               {DRINK_TYPES.map((t) => (
                 <div key={t.id} className="flex items-center gap-1.5">
                   <div
-                    className="h-5 w-5 shrink-0 rounded border border-border"
+                    className="h-5 w-5 shrink-0 rounded-none border border-border"
                     style={{ backgroundColor: effectiveColors[t.id as keyof typeof effectiveColors] }}
                   />
                   <span className="text-[10px] text-muted-foreground">{t.label}</span>
@@ -493,12 +496,12 @@ export function SettingsSidebar({
                       applyColorLive({ color_palette: v });
                     }}
                   >
-                    <SelectTrigger id="dialog-color_palette">
+                    <SelectTrigger id="dialog-color_palette" className="rounded-none">
                       <SelectValue placeholder="Color palette" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-none">
                       {Object.keys(COLOR_PALETTES).map((id) => (
-                        <SelectItem key={id} value={id}>
+                        <SelectItem key={id} value={id} className="rounded-none">
                           {id.charAt(0).toUpperCase() + id.slice(1)}
                         </SelectItem>
                       ))}
@@ -507,11 +510,11 @@ export function SettingsSidebar({
                 </div>
                 <div className="grid gap-2">
                   <Label>Preview</Label>
-                  <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
+                  <div className="flex flex-wrap items-center gap-3 rounded-none border border-border bg-muted/30 p-3">
                     {DRINK_TYPES.map((t) => (
                       <div key={t.id} className="flex items-center gap-2">
                         <div
-                          className="h-8 w-8 shrink-0 rounded-md border border-border"
+                          className="h-8 w-8 shrink-0 rounded-none border border-border"
                           style={{ backgroundColor: effectiveColors[t.id as keyof typeof effectiveColors] }}
                         />
                         <span className="text-xs text-muted-foreground">{t.label}</span>
@@ -530,7 +533,7 @@ export function SettingsSidebar({
                       const hex = watch(key);
                       const value = hex?.trim().match(/^#[0-9A-Fa-f]{6}$/) ? hex.trim() : "";
                       return (
-                        <div key={t.id} className="flex items-center gap-2">
+                        <div key={t.id} className="flex items-center gap-2 rounded-none">
                           <ColorPicker
                             color={value || "#94a3b8"}
                             onChange={(newHex) => {
@@ -584,15 +587,15 @@ export function SettingsSidebar({
               Clear all data
             </Button>
           </div>
+          <div className="flex shrink-0 gap-2 border-t border-border pt-6">
+            <Button type="submit">
+              Save
+            </Button>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          </div>
       </form>
-      <div className="flex shrink-0 gap-2 border-t border-border px-4 py-3">
-        <Button type="submit" form="settings-form">
-          Save
-        </Button>
-        <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-      </div>
     </aside>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import type { UserData } from "@/lib/types";
 import type { WeeklyDaySummary } from "@/lib/types";
@@ -64,34 +64,30 @@ export function WeeklySummaryBar({ data, weeklyHistory }: WeeklySummaryBarProps)
           Progress toward daily goal by day
         </span>
       </div>
-      <div className="h-[180px] w-full">
-        <ChartContainer config={chartConfig} className="h-full w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
-            >
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis type="number" domain={[0, 100]} hide />
-              <Bar
-                dataKey="value"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={32}
-                isAnimationActive={true}
-              >
-                {chartData.map((entry, i) => (
-                  <Cell key={i} fill={barColorByProgress(entry.value)} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-      </div>
+      <ChartContainer config={chartConfig} className="h-[180px] w-full">
+        <BarChart
+          data={chartData}
+          margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
+        >
+          <XAxis
+            dataKey="day"
+            tick={{ fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis type="number" domain={[0, 100]} hide />
+          <Bar
+            dataKey="value"
+            radius={[4, 4, 0, 0]}
+            maxBarSize={32}
+            isAnimationActive={true}
+          >
+            {chartData.map((entry, i) => (
+              <Cell key={i} fill={barColorByProgress(entry.value)} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
       {/* Legend: what each bar color represents (progress toward goal) */}
       <div className="mt-3 flex flex-wrap items-center justify-center gap-4 border-t border-border pt-3 text-xs">
         <div className="flex items-center gap-1.5">
