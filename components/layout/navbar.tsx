@@ -17,13 +17,26 @@ import { usePlatform } from "@/hooks/usePlatform";
 import type { UserData } from "@/lib/types";
 
 type NavbarProps = {
-  userData: UserData | null;
-  onOpenSettings: () => void;
+  /** "app" for dashboard with user/settings, "site" for landing/marketing pages */
+  variant?: "app" | "site";
+  /** Required for "app" variant */
+  userData?: UserData | null;
+  /** Required for "app" variant */
+  onOpenSettings?: () => void;
   /** When true, settings is open (triggers icon spin when opened via keyboard). */
   settingsOpen?: boolean;
+  /** Custom action for "Open app" button in "site" variant */
+  onOpenApp?: () => void;
 };
 
-export function Navbar({ userData, onOpenSettings, settingsOpen }: NavbarProps) {
+export function Navbar({
+  variant = "app",
+  userData,
+  onOpenSettings,
+  settingsOpen,
+  onOpenApp,
+}: NavbarProps) {
+  const isApp = variant === "app";
   const name = userData?.name?.trim() || "Guest";
   const profileImage = userData?.profileImage;
   const [spinKey, setSpinKey] = useState(0);
@@ -31,17 +44,17 @@ export function Navbar({ userData, onOpenSettings, settingsOpen }: NavbarProps) 
   const prevSettingsOpen = useRef(settingsOpen ?? false);
   const { modSymbol } = usePlatform();
 
-  // Trigger spin when settings is opened via keyboard (parent sets settingsOpen to true).
   useEffect(() => {
+    if (!isApp) return;
     const open = settingsOpen ?? false;
     if (open && !prevSettingsOpen.current) {
       setSpinKey((k) => k + 1);
     }
     prevSettingsOpen.current = open;
-  }, [settingsOpen]);
+  }, [settingsOpen, isApp]);
 
-  // GitHub shortcut: Cmd/Ctrl + Shift + G
   useEffect(() => {
+    if (!isApp) return;
     const handleGithubKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "g") {
         e.preventDefault();
@@ -52,15 +65,15 @@ export function Navbar({ userData, onOpenSettings, settingsOpen }: NavbarProps) 
     };
     window.addEventListener("keydown", handleGithubKey);
     return () => window.removeEventListener("keydown", handleGithubKey);
-  }, []);
+  }, [isApp]);
 
   const handleOpenSettings = () => {
     setSpinKey((k) => k + 1);
-    onOpenSettings();
+    onOpenSettings?.();
   };
 
   return (
-    <header className="flex w-full cursor-pointer items-center justify-between border-b border-border py-3 px-4">
+    <header className="flex w-full items-center justify-between border-b border-border py-3 px-4">
       <Link
         href="/"
         className="flex items-center gap-2 font-semibold text-foreground font-archivo"
@@ -70,21 +83,25 @@ export function Navbar({ userData, onOpenSettings, settingsOpen }: NavbarProps) 
         {PRODUCT_NAME}
       </Link>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground font-archivo hidden sm:inline">
-          {name}
-        </span>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
-          {profileImage ? (
-            <img
-              src={profileImage}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <User className="h-4 w-4 text-muted-foreground" />
-          )}
-        </div>
-        <ThemeToggle />
+        {isApp && (
+          <>
+            <span className="text-xs text-muted-foreground font-archivo hidden sm:inline">
+              {name}
+            </span>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <User className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+          </>
+        )}
+        <ThemeToggle showShortcut={isApp} />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -111,27 +128,46 @@ export function Navbar({ userData, onOpenSettings, settingsOpen }: NavbarProps) 
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="flex items-center gap-1.5">
-            GitHub <Kbd>{modSymbol}</Kbd> + <Kbd>⇧</Kbd> + <Kbd>G</Kbd>
+            {isApp ? (
+              <>GitHub <Kbd>{modSymbol}</Kbd> + <Kbd>⇧</Kbd> + <Kbd>G</Kbd></>
+            ) : (
+              "GitHub"
+            )}
           </TooltipContent>
         </Tooltip>
-        <KeyboardShortcuts />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleOpenSettings}
-              aria-label="Open settings"
-            >
-              <span key={spinKey} className="inline-block animate-settings-icon-spin">
-                <Settings className="h-4 w-4" />
-              </span>
+        {isApp && (
+          <>
+            <KeyboardShortcuts />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleOpenSettings}
+                  aria-label="Open settings"
+                >
+                  <span key={spinKey} className="inline-block animate-settings-icon-spin">
+                    <Settings className="h-4 w-4" />
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="flex items-center gap-1.5">
+                Settings <Kbd>{modSymbol}</Kbd> + <Kbd>S</Kbd>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        )}
+        {!isApp && (
+          onOpenApp ? (
+            <Button variant="outline" size="sm" onClick={onOpenApp}>
+              Open app
             </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="flex items-center gap-1.5">
-            Settings <Kbd>{modSymbol}</Kbd> + <Kbd>S</Kbd>
-          </TooltipContent>
-        </Tooltip>
+          ) : (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/app">Open app</Link>
+            </Button>
+          )
+        )}
       </div>
     </header>
   );

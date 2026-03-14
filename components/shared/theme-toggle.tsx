@@ -10,10 +10,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { usePlatform } from "@/hooks/usePlatform";
 
-export function ThemeToggle() {
+type ThemeToggleProps = {
+  /** Show keyboard shortcut in tooltip (default true) */
+  showShortcut?: boolean;
+};
+
+export function ThemeToggle({ showShortcut = true }: ThemeToggleProps) {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { modSymbol } = usePlatform();
 
   useEffect(() => setMounted(true), []);
 
@@ -36,11 +43,13 @@ export function ThemeToggle() {
       </TooltipTrigger>
       <TooltipContent side="bottom" className="flex items-center gap-1.5">
         {mounted ? (isDark ? "Light mode" : "Dark mode") : "Theme"}
-        <KbdGroup className="shrink-0">
-          <Kbd>⌘</Kbd>
-          <Kbd>⇧</Kbd>
-          <Kbd>T</Kbd>
-        </KbdGroup>
+        {showShortcut && (
+          <KbdGroup className="shrink-0">
+            <Kbd>{modSymbol}</Kbd>
+            <Kbd>⇧</Kbd>
+            <Kbd>T</Kbd>
+          </KbdGroup>
+        )}
       </TooltipContent>
     </Tooltip>
   );
