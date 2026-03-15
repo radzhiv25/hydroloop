@@ -166,35 +166,62 @@ export function LandingPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-40 dark:opacity-30">
+        {/* Mesh gradient with multiple animated blobs spread throughout */}
         <motion.div
-          className="absolute -bottom-56 -right-56 h-[900px] w-[900px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, oklch(0.85 0.08 252), transparent 55%), radial-gradient(circle at 60% 60%, oklch(0.623 0.214 259.815), transparent 55%)",
-            opacity: 0.45,
-            maskImage:
-              "radial-gradient(circle at 60% 60%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0) 72%)",
-            WebkitMaskImage:
-              "radial-gradient(circle at 60% 60%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0) 72%)",
+          className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full blur-[150px]"
+          style={{ background: "oklch(0.8 0.12 250)" }}
+          animate={{ 
+            x: [0, 20, 0], 
+            y: [0, 30, 0],
           }}
-          animate={{ y: [0, 12, 0], x: [0, -10, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -right-24 top-1/4 h-[450px] w-[450px] rounded-full blur-[130px]"
+          style={{ background: "oklch(0.75 0.14 255)" }}
+          animate={{ 
+            x: [0, -30, 0], 
+            y: [0, -20, 0],
+          }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -bottom-32 left-1/4 h-[550px] w-[550px] rounded-full blur-[140px]"
+          style={{ background: "oklch(0.7 0.15 245)" }}
+          animate={{ 
+            x: [0, 25, 0], 
+            y: [0, -15, 0],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -bottom-24 -right-24 h-[400px] w-[400px] rounded-full blur-[120px]"
+          style={{ background: "oklch(0.85 0.1 260)" }}
+          animate={{ 
+            x: [0, -20, 0], 
+            y: [0, 25, 0],
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute left-1/2 top-1/2 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px]"
+          style={{ background: "oklch(0.9 0.08 240)" }}
+          animate={{ 
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
       <Navbar variant="site" onOpenApp={goToAppWithSplash} />
 
       <main className="flex flex-1 flex-col">
-        <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.985_0_0)] via-transparent to-transparent dark:from-[oklch(0.145_0_0)]" />
-          </div>
-
+        <section className="relative">
           <div className="mx-auto w-full max-w-3xl px-4 py-8">
             <Hero />
 
-            <div className="mx-auto mt-4 flex max-w-xl flex-col items-center gap-2 text-center">
+            <div className="mx-auto mt-4 flex max-w-xl flex-col items-center gap-3 text-center">
               <div className="flex flex-col items-center gap-2 sm:flex-row">
                 <WaterFillCta className="w-full sm:w-auto" label="Start tracking" />
                 <Button
@@ -208,6 +235,13 @@ export function LandingPage() {
               <p className="text-xs text-muted-foreground font-archivo">
                 Quick add (100/250/500ml), streaks, and charts all built for calm consistency.
               </p>
+              <a 
+                href="#cli" 
+                className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-archivo"
+              >
+                <Terminal className="h-3 w-3" />
+                Prefer the terminal? Try the CLI
+              </a>
             </div>
           </div>
         </section>
@@ -333,7 +367,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10">
+        <section id="cli" className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10 scroll-mt-16">
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
               <Terminal className="h-3.5 w-3.5" />
