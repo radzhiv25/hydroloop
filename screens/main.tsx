@@ -36,9 +36,11 @@ export function MainPage() {
   const [isRefreshingAfterSettings, setIsRefreshingAfterSettings] = useState(false);
 
   const showWelcome = () => {
-    const stored = getUserData();
-    const hasName = stored?.name?.trim();
-    if (!hasName) setWelcomeOpen(true);
+    void (async () => {
+      const stored = await getUserData();
+      const hasName = stored?.name?.trim();
+      if (!hasName) setWelcomeOpen(true);
+    })();
   };
 
   useEffect(() => {

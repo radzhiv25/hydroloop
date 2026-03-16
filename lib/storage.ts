@@ -1,4 +1,5 @@
 import type { UserData, WaterLogEntry, WeeklyDaySummary, ChartType } from "./types";
+import { kvGet, kvRemove, kvSet } from "./db";
 import {
   STORAGE_KEY,
   STREAK_HISTORY_KEY,
@@ -13,16 +14,14 @@ import {
   DEFAULT_COLOR_PALETTE,
 } from "@/constants/hydration";
 
-/** Removes all app data from localStorage (user data, streaks, weekly history). */
-export function clearAllData(): void {
+/** Removes all app data from IndexedDB (user data, streaks, weekly history). */
+export async function clearAllData(): Promise<void> {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(STREAK_HISTORY_KEY);
-    localStorage.removeItem(WEEKLY_HISTORY_KEY);
-  } catch {
-    // ignore
-  }
+  await Promise.all([
+    kvRemove(STORAGE_KEY),
+    kvRemove(STREAK_HISTORY_KEY),
+    kvRemove(WEEKLY_HISTORY_KEY),
+  ]);
 }
 
 function getTodayISO(): string {
@@ -49,10 +48,10 @@ function createDefaultData(date: string): UserData {
 
 const VALID_CHART_TYPES: ChartType[] = ["line", "bar", "area", "radar", "radial"];
 
-export function getUserData(): UserData | null {
+export async function getUserData(): Promise<UserData | null> {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = await kvGet(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Omit<UserData, "chart_type"> & { chart_type?: string };
     const ct = parsed.chart_type;
@@ -65,18 +64,14 @@ export function getUserData(): UserData | null {
   }
 }
 
-export function saveUserData(data: UserData): void {
+export async function saveUserData(data: UserData): Promise<void> {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // ignore
-  }
+  await kvSet(STORAGE_KEY, JSON.stringify(data));
 }
 
-export function getOrCreateUserData(): UserData {
+export async function getOrCreateUserData(): Promise<UserData> {
   const today = getTodayISO();
-  const existing = getUserData();
+  const existing = await getUserData();
   if (existing?.date === today) return existing;
   if (existing) {
     const reset = resetDailyData(existing);
@@ -85,10 +80,10 @@ export function getOrCreateUserData(): UserData {
   return createDefaultData(today);
 }
 
-export function getStreakHistory(): Record<string, boolean> {
+export async function getStreakHistory(): Promise<Record<string, boolean>> {
   if (typeof window === "undefined") return {};
   try {
-    const raw = localStorage.getItem(STREAK_HISTORY_KEY);
+    const raw = await kvGet(STREAK_HISTORY_KEY);
     if (!raw) return {};
     return JSON.parse(raw);
   } catch {
@@ -96,25 +91,21 @@ export function getStreakHistory(): Record<string, boolean> {
   }
 }
 
-export function setStreakHistory(history: Record<string, boolean>): void {
+export async function setStreakHistory(history: Record<string, boolean>): Promise<void> {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STREAK_HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    // ignore
-  }
+  await kvSet(STREAK_HISTORY_KEY, JSON.stringify(history));
 }
 
-export function markDayAsLogged(dateStr: string): void {
-  const history = getStreakHistory();
+export async function markDayAsLogged(dateStr: string): Promise<void> {
+  const history = await getStreakHistory();
   history[dateStr] = true;
-  setStreakHistory(history);
+  await setStreakHistory(history);
 }
 
-export function getWeeklyHistory(): WeeklyDaySummary[] {
+export async function getWeeklyHistory(): Promise<WeeklyDaySummary[]> {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(WEEKLY_HISTORY_KEY);
+    const raw = await kvGet(WEEKLY_HISTORY_KEY);
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -122,12 +113,12 @@ export function getWeeklyHistory(): WeeklyDaySummary[] {
   }
 }
 
-function pushWeeklyHistory(day: WeeklyDaySummary): void {
+async function pushWeeklyHistory(day: WeeklyDaySummary): Promise<void> {
   if (typeof window === "undefined") return;
   try {
-    const list = getWeeklyHistory();
+    const list = await getWeeklyHistory();
     const next = [...list, day].slice(-WEEKLY_HISTORY_DAYS);
-    localStorage.setItem(WEEKLY_HISTORY_KEY, JSON.stringify(next));
+    await kvSet(WEEKLY_HISTORY_KEY, JSON.stringify(next));
   } catch {
     // ignore
   }
@@ -142,7 +133,7 @@ export function updateWater(
   const now = new Date();
   const timeStr = time ?? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const entry: WaterLogEntry = { time: timeStr, amount, drinkType: drinkType ?? "water" };
-  markDayAsLogged(data.date);
+  void markDayAsLogged(data.date);
   return {
     ...data,
     water_consumed: data.water_consumed + amount,
@@ -165,8 +156,8 @@ export function deleteLog(data: UserData, index: number): UserData {
 
 export function resetDailyData(data: UserData): UserData {
   const today = getTodayISO();
-  if (data.logs.length > 0) markDayAsLogged(data.date);
-  pushWeeklyHistory({
+  if (data.logs.length > 0) void markDayAsLogged(data.date);
+  void pushWeeklyHistory({
     date: data.date,
     water_consumed: data.water_consumed,
     daily_goal: data.daily_goal,

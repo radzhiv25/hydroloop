@@ -37,17 +37,17 @@ export function WelcomeDialog({
     defaultValues: { name: "", profileImage: "" },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     const parsed = schema.safeParse(values);
     if (!parsed.success) return;
-    const data = getOrCreateUserData();
+    const data = await getOrCreateUserData();
     const v = parsed.data;
     const next = {
       ...data,
       name: v.name ?? data.name,
       profileImage: v.profileImage ?? data.profileImage,
     };
-    saveUserData(next);
+    await saveUserData(next);
     onComplete();
     onOpenChange(false);
   };

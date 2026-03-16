@@ -19,26 +19,28 @@ export function useHydration() {
   const [streakHistory, setStreakHistory] = useState<Record<string, boolean>>({});
   const [weeklyHistory, setWeeklyHistory] = useState<WeeklyDaySummary[]>([]);
 
-  const load = useCallback(() => {
-    const next = getOrCreateUserData();
+  const load = useCallback(async () => {
+    const next = await getOrCreateUserData();
     const reset = ensureDailyReset(next);
-    if (JSON.stringify(reset) !== JSON.stringify(next)) saveUserData(reset);
+    if (JSON.stringify(reset) !== JSON.stringify(next)) {
+      await saveUserData(reset);
+    }
     setData(reset);
-    setStreakHistory(getStreakHistory());
-    setWeeklyHistory(getWeeklyHistory());
+    setStreakHistory(await getStreakHistory());
+    setWeeklyHistory(await getWeeklyHistory());
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const addWater = useCallback(
-    (amount: number, time?: string, drinkType?: string) => {
+    async (amount: number, time?: string, drinkType?: string) => {
       if (!data) return;
       const next = updateWaterStorage(data, amount, time, drinkType);
-      saveUserData(next);
+      await saveUserData(next);
       setData(next);
-      setStreakHistory(getStreakHistory());
+      setStreakHistory(await getStreakHistory());
     },
     [data]
   );
@@ -47,7 +49,7 @@ export function useHydration() {
     setData((prev) => {
       if (!prev) return prev;
       const next = { ...prev, daily_goal: Math.max(500, Math.min(5000, goal)) };
-      saveUserData(next);
+      void saveUserData(next);
       return next;
     });
   }, []);
@@ -56,17 +58,19 @@ export function useHydration() {
     setData((prev) => {
       if (!prev) return prev;
       const next = deleteLogStorage(prev, index);
-      saveUserData(next);
+      void saveUserData(next);
       return next;
     });
-    setStreakHistory(getStreakHistory());
+    void (async () => {
+      setStreakHistory(await getStreakHistory());
+    })();
   }, []);
 
   const updateSettings = useCallback((updates: Partial<UserData>) => {
     setData((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...updates };
-      saveUserData(next);
+      void saveUserData(next);
       return next;
     });
   }, []);

@@ -7,18 +7,19 @@ import {
   SPLASH_SCREENSHOT_MODE,
   SPLASH_FROM_LANDING_KEY,
 } from "@/constants";
+import { kvGet, kvSet } from "@/lib/db";
 import { SplashPage } from "@/screens/splash";
 
 type SplashGateProps = {
   children: React.ReactNode;
 };
 
-function getShowSplash(): boolean {
+async function getShowSplash(): Promise<boolean> {
   if (SPLASH_SCREENSHOT_MODE) return true;
   if (typeof window === "undefined") return true;
   try {
     if (sessionStorage.getItem(SPLASH_FROM_LANDING_KEY) === "1") return true;
-    const raw = localStorage.getItem(SPLASH_STORAGE_KEY);
+    const raw = await kvGet(SPLASH_STORAGE_KEY);
     if (!raw) return true;
     const lastAt = Number(raw);
     if (Number.isNaN(lastAt)) return true;
@@ -28,12 +29,8 @@ function getShowSplash(): boolean {
   }
 }
 
-function saveSplashDone(): void {
-  try {
-    localStorage.setItem(SPLASH_STORAGE_KEY, String(Date.now()));
-  } catch {
-    // ignore
-  }
+async function saveSplashDone(): Promise<void> {
+  await kvSet(SPLASH_STORAGE_KEY, String(Date.now()));
 }
 
 function clearFromLandingFlag(): void {
@@ -48,13 +45,16 @@ export function SplashGate({ children }: SplashGateProps) {
   const [showSplash, setShowSplash] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setShowSplash(getShowSplash());
+    void (async () => {
+      const value = await getShowSplash();
+      setShowSplash(value);
+    })();
   }, []);
 
   const handleSplashComplete = () => {
     if (SPLASH_SCREENSHOT_MODE) return;
     clearFromLandingFlag();
-    saveSplashDone();
+    void saveSplashDone();
     setShowSplash(false);
   };
 
