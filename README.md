@@ -154,13 +154,33 @@ cd cli && npm link
 hydroloop --help
 ```
 
+## Mobile app (planned)
+
+A native mobile experience is **not shipped yet**; it is on the roadmap so you know what to expect.
+
+**For users**
+
+- **Platforms** — The plan is iOS and Android via [React Native](https://reactnative.dev), so you get one consistent app on your phone, not just the website in a browser tab.
+- **Same spirit as the web app** — Local-first storage, quick logging (water, tea, coffee), goals, streaks, and charts comparable to what you use on desktop—optimized for small screens and touch.
+- **Why mobile matters** — Timely reminders and one-tap logging away from the keyboard, while your data stays oriented around privacy and device control (same philosophy as today’s web and CLI).
+- **Timeline** — There is no public release date yet; follow [Issues](https://github.com/radzhiv25/hydroloop/issues) and releases on GitHub for updates.
+
+**For contributors**
+
+- Work may land on branches such as `feature/mobile` before a public app store listing; the README will be updated when install paths and repo layout for mobile are stable.
+
 ## Roadmap
 
-- [ ] Mobile app (React Native)
+- [ ] Mobile app (React Native) — see [Mobile app (planned)](#mobile-app-planned)
 - [ ] Cloud sync with BaaS
 - [ ] Apple Health / Google Fit integration
 - [ ] Browser extension
 - [ ] Slack/Discord bot
+
+## Contributors
+
+- [@radzhiv25](https://github.com/radzhiv25) — creator & maintainer
+- *Add your peer or collaborator here (name, role, optional GitHub link).*
 
 ## License
 
