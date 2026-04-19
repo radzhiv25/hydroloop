@@ -32,6 +32,11 @@ export type UserData = {
   custom_sound_url?: string;
   /** How long the reminder sound plays in seconds (loop until duration). */
   reminder_sound_duration_seconds?: number;
+  /**
+   * Days when reminders may fire, using JavaScript weekday: 0 = Sunday … 6 = Saturday.
+   * Empty or missing is treated as all days when loading legacy data.
+   */
+  reminder_days?: number[];
   time_span: TimeSpan;
   daily_goal: number; // ml
   water_consumed: number;

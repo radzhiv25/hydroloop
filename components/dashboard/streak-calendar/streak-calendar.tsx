@@ -75,7 +75,7 @@ export function StreakCalendar({
               <CalendarDayButton {...props}>
                 {props.modifiers?.logged ? (
                   <GlassWater
-                    className="size-5 text-sky-800 dark:text-sky-100"
+                    className="size-5 text-sky-800 dark:text-sky-400"
                     aria-hidden
                   />
                 ) : (

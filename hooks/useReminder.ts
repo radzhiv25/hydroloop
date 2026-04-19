@@ -8,6 +8,7 @@ import {
   REMINDER_SOUNDS,
   REMINDER_SOUND_CUSTOM,
 } from "@/constants/hydration";
+import { normalizeReminderDays } from "@/lib/reminder-weekdays";
 
 const POLL_MS = 60_000; // check every minute
 const NOTIFICATION_TITLE = "Hydroloop";
@@ -32,25 +33,28 @@ function getReminderSlotsMinutes(
 
 function getNextReminderTime(
   slotsMinutes: number[],
-  now: Date
+  now: Date,
+  allowedWeekdays: Set<number>
 ): Date | null {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  if (slotsMinutes.length === 0 || allowedWeekdays.size === 0) return null;
 
-  for (const slot of slotsMinutes) {
-    const slotDate = new Date(today);
-    slotDate.setHours(Math.floor(slot / 60), slot % 60, 0, 0);
-    if (slotDate.getTime() > now.getTime()) {
-      return slotDate;
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  for (let addDays = 0; addDays < 8; addDays++) {
+    const dayStart = new Date(startOfToday);
+    dayStart.setDate(dayStart.getDate() + addDays);
+    const wd = dayStart.getDay();
+    if (!allowedWeekdays.has(wd)) continue;
+
+    for (const slotMin of slotsMinutes) {
+      const candidate = new Date(dayStart);
+      candidate.setHours(Math.floor(slotMin / 60), slotMin % 60, 0, 0);
+      if (candidate.getTime() > now.getTime()) {
+        return candidate;
+      }
     }
   }
-  // Next is tomorrow at first slot
-  const first = slotsMinutes[0];
-  if (first == null) return null;
-  const next = new Date(today);
-  next.setDate(next.getDate() + 1);
-  next.setHours(Math.floor(first / 60), first % 60, 0, 0);
-  return next;
+  return null;
 }
 
 function getSoundUrl(soundId: string, customSoundUrl?: string | null): string {
@@ -91,7 +95,10 @@ export function useReminder(userData: UserData | null) {
   const nextRef = useRef<Date | null>(null);
   const permissionRef = useRef<NotificationPermission | null>(null);
   const dataRef = useRef(userData);
-  dataRef.current = userData;
+
+  useEffect(() => {
+    dataRef.current = userData;
+  }, [userData]);
 
   const requestPermission = useCallback(async () => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -140,6 +147,9 @@ export function useReminder(userData: UserData | null) {
     const slots = getReminderSlotsMinutes(start, end, interval);
     if (slots.length === 0) return;
 
+    const allowed = new Set(normalizeReminderDays(userData.reminder_days));
+    if (allowed.size === 0) return;
+
     requestPermission();
 
     const tick = () => {
@@ -147,11 +157,11 @@ export function useReminder(userData: UserData | null) {
       const next = nextRef.current;
       if (next && now.getTime() >= next.getTime()) {
         fireReminder();
-        nextRef.current = getNextReminderTime(slots, now);
+        nextRef.current = getNextReminderTime(slots, now, allowed);
       }
     };
 
-    nextRef.current = getNextReminderTime(slots, new Date());
+    nextRef.current = getNextReminderTime(slots, new Date(), allowed);
     tick();
     intervalRef.current = setInterval(tick, POLL_MS);
     return () => {
@@ -163,6 +173,7 @@ export function useReminder(userData: UserData | null) {
     };
   }, [
     userData?.reminder_interval,
+    userData?.reminder_days,
     userData?.time_span.start,
     userData?.time_span.end,
     userData?.reminder_sound,

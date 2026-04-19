@@ -21,6 +21,8 @@ import {
   MAX_DAILY_GOAL,
   DAILY_GOAL_PRESETS,
   DEFAULT_REMINDER_INTERVAL,
+  DEFAULT_REMINDER_DAYS,
+  REMINDER_WEEKDAY_TOGGLES,
   REMINDER_SOUNDS,
   REMINDER_SOUND_CUSTOM,
   DEFAULT_REMINDER_SOUND,
@@ -33,10 +35,11 @@ import {
   DEFAULT_COLOR_PALETTE,
   DRINK_TYPES,
 } from "@/constants/hydration";
+import { MEASURED_BOTTLE_TIP } from "@/constants";
+import { normalizeReminderDays } from "@/lib/reminder-weekdays";
 import { uploadSoundToCloudinary } from "@/lib/cloudinary";
 import { playReminderSoundForDuration } from "@/hooks/useReminder";
 import { Trash2, Palette, Volume2, X, Upload, Loader2 } from "lucide-react";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
   Dialog,
@@ -55,6 +58,7 @@ const schema = z.object({
   reminder_sound_duration_seconds: z.number().min(MIN_REMINDER_SOUND_DURATION).max(MAX_REMINDER_SOUND_DURATION),
   time_start: z.string(),
   time_end: z.string(),
+  reminder_days: z.array(z.number().int().min(0).max(6)).min(1),
   daily_goal: z.number().min(MIN_DAILY_GOAL).max(MAX_DAILY_GOAL),
   chart_type: z.enum(["line", "bar", "area", "radar", "radial"]),
   color_palette: z.string(),
@@ -95,6 +99,7 @@ export function SettingsSidebar({
             reminder_sound_duration_seconds: data.reminder_sound_duration_seconds ?? DEFAULT_REMINDER_SOUND_DURATION,
             time_start: data.time_span.start,
             time_end: data.time_span.end,
+            reminder_days: normalizeReminderDays(data.reminder_days),
             daily_goal: data.daily_goal,
             chart_type: data.chart_type ?? DEFAULT_CHART_TYPE,
             color_palette: data.color_palette ?? DEFAULT_COLOR_PALETTE,
@@ -177,6 +182,7 @@ export function SettingsSidebar({
         reminder_sound_duration_seconds: data.reminder_sound_duration_seconds ?? DEFAULT_REMINDER_SOUND_DURATION,
         time_start: data.time_span.start,
         time_end: data.time_span.end,
+        reminder_days: normalizeReminderDays(data.reminder_days),
         daily_goal: data.daily_goal,
         chart_type: data.chart_type ?? DEFAULT_CHART_TYPE,
         color_palette: data.color_palette ?? DEFAULT_COLOR_PALETTE,
@@ -220,6 +226,7 @@ export function SettingsSidebar({
       custom_sound_url: v.reminder_sound === REMINDER_SOUND_CUSTOM ? (v.custom_sound_url?.trim() || undefined) : undefined,
       reminder_sound_duration_seconds: v.reminder_sound_duration_seconds ?? DEFAULT_REMINDER_SOUND_DURATION,
       time_span: { start: v.time_start, end: v.time_end },
+      reminder_days: normalizeReminderDays(v.reminder_days),
       daily_goal: v.daily_goal,
       chart_type: chartType,
       color_palette: (Object.keys(COLOR_PALETTES).includes(v.color_palette)
@@ -261,13 +268,6 @@ export function SettingsSidebar({
         className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-4"
       >
           <div className="grid gap-2">
-            <Label>Appearance</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Theme</span>
-              <ThemeToggle />
-            </div>
-          </div>
-          <div className="grid gap-2">
             <Label htmlFor="settings-name">Name</Label>
             <Input id="settings-name" {...register("name")} />
           </div>
@@ -277,6 +277,62 @@ export function SettingsSidebar({
               id="settings-profileImage"
               type="url"
               {...register("profileImage")}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Reminder days</Label>
+            <p className="text-[10px] text-muted-foreground leading-snug">
+              Reminders only on selected days, during the hours below.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {REMINDER_WEEKDAY_TOGGLES.map(({ value, label }) => {
+                const days = watch("reminder_days") ?? [...DEFAULT_REMINDER_DAYS];
+                const selected = days.includes(value);
+                return (
+                  <Button
+                    key={value}
+                    type="button"
+                    size="sm"
+                    variant={selected ? "default" : "outline"}
+                    className="min-w-[2.75rem] rounded-none px-2 text-xs"
+                    onClick={() => {
+                      const cur = normalizeReminderDays(days);
+                      if (cur.includes(value)) {
+                        if (cur.length <= 1) return;
+                        setValue(
+                          "reminder_days",
+                          cur.filter((d) => d !== value),
+                          { shouldDirty: true }
+                        );
+                      } else {
+                        setValue(
+                          "reminder_days",
+                          normalizeReminderDays([...cur, value]),
+                          { shouldDirty: true }
+                        );
+                      }
+                    }}
+                  >
+                    {label}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="settings-time_start">Reminder window start</Label>
+            <Input
+              id="settings-time_start"
+              type="time"
+              {...register("time_start")}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="settings-time_end">Reminder window end</Label>
+            <Input
+              id="settings-time_end"
+              type="time"
+              {...register("time_end")}
             />
           </div>
           <div className="grid gap-2">
@@ -395,21 +451,8 @@ export function SettingsSidebar({
               </span>
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="settings-time_start">Reminder window start</Label>
-            <Input
-              id="settings-time_start"
-              type="time"
-              {...register("time_start")}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="settings-time_end">Reminder window end</Label>
-            <Input
-              id="settings-time_end"
-              type="time"
-              {...register("time_end")}
-            />
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+            <p className="text-xs leading-relaxed text-muted-foreground">{MEASURED_BOTTLE_TIP}</p>
           </div>
           <div className="grid gap-2">
             <Label>Daily goal (ml)</Label>

@@ -22,6 +22,16 @@ export function startReminderLoop() {
   const intervalMs = intervalMinutes * 60 * 1000;
 
   const tick = async () => {
+    const rawDays = store.get("reminderDays");
+    const fallback = [0, 1, 2, 3, 4, 5, 6];
+    const reminderDays = Array.isArray(rawDays) && rawDays.length ? rawDays : fallback;
+    const allowed = new Set(
+      reminderDays.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+    );
+    if (allowed.size === 0 || !allowed.has(new Date().getDay())) {
+      return;
+    }
+
     const goal = store.get("goal") ?? 2500;
     const todayTotal = getTodayTotal();
 

@@ -8,11 +8,13 @@ import {
   DEFAULT_DAILY_GOAL,
   DEFAULT_TIME_SPAN,
   DEFAULT_REMINDER_INTERVAL,
+  DEFAULT_REMINDER_DAYS,
   DEFAULT_REMINDER_SOUND,
   DEFAULT_REMINDER_SOUND_DURATION,
   DEFAULT_CHART_TYPE,
   DEFAULT_COLOR_PALETTE,
 } from "@/constants/hydration";
+import { normalizeReminderDays } from "@/lib/reminder-weekdays";
 
 /** Removes all app data from IndexedDB (user data, streaks, weekly history). */
 export async function clearAllData(): Promise<void> {
@@ -36,6 +38,7 @@ function createDefaultData(date: string): UserData {
     reminder_sound: DEFAULT_REMINDER_SOUND,
     reminder_sound_duration_seconds: DEFAULT_REMINDER_SOUND_DURATION,
     time_span: { ...DEFAULT_TIME_SPAN },
+    reminder_days: [...DEFAULT_REMINDER_DAYS],
     daily_goal: DEFAULT_DAILY_GOAL,
     water_consumed: 0,
     num_times_consumed: 0,
@@ -58,7 +61,9 @@ export async function getUserData(): Promise<UserData | null> {
     if (ct === "pie" || (ct != null && !VALID_CHART_TYPES.includes(ct as ChartType))) {
       parsed.chart_type = DEFAULT_CHART_TYPE;
     }
-    return parsed as UserData;
+    const withDays = parsed as UserData;
+    withDays.reminder_days = normalizeReminderDays(withDays.reminder_days);
+    return withDays;
   } catch {
     return null;
   }

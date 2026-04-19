@@ -20,6 +20,7 @@ import { StatsCard } from "@/components/dashboard/stats-card/stats-card";
 import { KeyboardShortcuts } from "@/components/dashboard/keyboard-shortcuts/keyboard-shortcuts";
 import { usePlatform } from "@/hooks/usePlatform";
 import type { UserData, WeeklyDaySummary } from "@/lib/types";
+import { DEFAULT_REMINDER_DAYS } from "@/constants/hydration";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
@@ -118,6 +119,7 @@ function makeLandingSample() {
     name: "Ava",
     profileImage: "",
     reminder_interval: 45,
+    reminder_days: [...DEFAULT_REMINDER_DAYS],
     time_span: { start: "09:00", end: "19:00" },
     daily_goal: 2500,
     water_consumed: waterConsumed,

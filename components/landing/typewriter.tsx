@@ -11,10 +11,11 @@ type TypewriterProps = {
 };
 
 export function Typewriter({ onComplete }: TypewriterProps) {
-  const { line1, line2, charDelayMs, linePauseMs } = SPLASH;
+  const { line1, line2, line3, charDelayMs, linePauseMs } = SPLASH;
   const [display1, setDisplay1] = useState("");
   const [display2, setDisplay2] = useState("");
-  const [phase, setPhase] = useState<"line1" | "line2" | "done">("line1");
+  const [display3, setDisplay3] = useState("");
+  const [phase, setPhase] = useState<"line1" | "line2" | "line3" | "done">("line1");
   const { modSymbol } = usePlatform();
 
   useEffect(() => {
@@ -36,15 +37,28 @@ export function Typewriter({ onComplete }: TypewriterProps) {
         }, charDelayMs);
         return () => clearTimeout(t);
       }
+      const t = setTimeout(() => setPhase("line3"), linePauseMs);
+      return () => clearTimeout(t);
+    }
+
+    if (phase === "line3") {
+      if (display3.length < line3.length) {
+        const t = setTimeout(() => {
+          setDisplay3(line3.slice(0, display3.length + 1));
+        }, charDelayMs);
+        return () => clearTimeout(t);
+      }
       const t = setTimeout(() => setPhase("done"), linePauseMs);
       return () => clearTimeout(t);
     }
 
     return undefined;
-  }, [display1, display2, phase, line1, line2, charDelayMs, linePauseMs]);
+  }, [display1, display2, display3, phase, line1, line2, line3, charDelayMs, linePauseMs]);
 
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
   useEffect(() => {
     if (phase === "done" && onCompleteRef.current) {
       const t = setTimeout(() => {
@@ -84,6 +98,11 @@ export function Typewriter({ onComplete }: TypewriterProps) {
           </motion.div>
         )}
       </AnimatePresence>
+      {(display3.length > 0 || phase === "line3" || phase === "done") && (
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground font-archivo sm:text-sm">
+          {display3}
+        </p>
+      )}
     </div>
   );
 }

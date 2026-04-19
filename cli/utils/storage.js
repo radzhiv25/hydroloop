@@ -13,6 +13,8 @@ const config = new Conf({
     selectedSound: "hydroloop_1",
     soundEnabled: true,
     soundDuration: 5,
+    /** JS weekday 0–Sun … 6–Sat; reminders only on these days. */
+    reminderDays: [0, 1, 2, 3, 4, 5, 6],
   },
 });
 

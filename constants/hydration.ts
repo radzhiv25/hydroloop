@@ -31,6 +31,20 @@ export const DAILY_GOAL_PRESETS = [1000, 1500, 2000, 2500] as const;
 export const DEFAULT_TIME_SPAN = { start: "09:00", end: "19:00" } as const;
 export const DEFAULT_REMINDER_INTERVAL = 45;
 
+/** Default: reminders allowed every day (JS weekday: Sun = 0 … Sat = 6). */
+export const DEFAULT_REMINDER_DAYS: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
+
+/** Mon → Sun row for settings toggles (values match Date.getDay() for Sun). */
+export const REMINDER_WEEKDAY_TOGGLES: readonly { value: number; label: string }[] = [
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+  { value: 0, label: "Sun" },
+];
+
 /** Reminder sound options (files in public/sounds). */
 export const REMINDER_SOUNDS = [
   { id: "hydroloop_1", label: "Hydroloop 1" },

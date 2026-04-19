@@ -5,7 +5,7 @@ import {
   TypographyLead,
   TypographyMuted,
 } from "@/components/ui/typography";
-import { PRODUCT_NAME } from "@/constants";
+import { MEASURED_BOTTLE_TIP, PRODUCT_NAME } from "@/constants";
 import { GlassWater } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -40,6 +40,15 @@ export function Hero() {
         <TypographyMuted className="font-archivo">
           Your daily hydration companion
         </TypographyMuted>
+      </motion.div>
+      <motion.div
+        variants={fadeUp}
+        transition={{ duration: 0.4 }}
+        className="mt-6 max-w-md rounded-md border border-border/80 bg-muted/40 px-2 py-1"
+      >
+        <p className="text-sm leading-relaxed text-muted-foreground font-archivo">
+          {MEASURED_BOTTLE_TIP}
+        </p>
       </motion.div>
     </motion.section>
   );

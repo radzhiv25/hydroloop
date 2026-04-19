@@ -1,9 +1,14 @@
 export const PRODUCT_NAME = "Hydroloop";
 export const GITHUB_URL = "https://github.com/radzhiv25/hydroloop";
 
+/** Shown on landing hero, settings, and splash for visibility. */
+export const MEASURED_BOTTLE_TIP =
+  "Works best with a measured water bottle clearer logs, better results.";
+
 export const SPLASH = {
   line1: "Welcome to Hydroloop",
   line2: "as every hydration matters to rejuvenate the inner you",
+  line3: MEASURED_BOTTLE_TIP,
   charDelayMs: 42,
   linePauseMs: 280,
 } as const;
