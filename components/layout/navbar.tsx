@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { PRODUCT_NAME, GITHUB_URL } from "@/constants";
+import { PRODUCT_NAME } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { KeyboardShortcuts } from "@/components/dashboard/keyboard-shortcuts/keyboard-shortcuts";
@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Settings, User, GlassWater, Github } from "lucide-react";
+import { Settings, User, GlassWater } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { usePlatform } from "@/hooks/usePlatform";
 import type { UserData } from "@/lib/types";
@@ -40,7 +40,6 @@ export function Navbar({
   const name = userData?.name?.trim() || "Guest";
   const profileImage = userData?.profileImage;
   const [spinKey, setSpinKey] = useState(0);
-  const [githubHovered, setGithubHovered] = useState(false);
   const prevSettingsOpen = useRef(settingsOpen ?? false);
   const { modSymbol } = usePlatform();
 
@@ -52,20 +51,6 @@ export function Navbar({
     }
     prevSettingsOpen.current = open;
   }, [settingsOpen, isApp]);
-
-  useEffect(() => {
-    if (!isApp) return;
-    const handleGithubKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "g") {
-        e.preventDefault();
-        setGithubHovered(true);
-        setTimeout(() => setGithubHovered(false), 300);
-        window.open(GITHUB_URL, "_blank", "noopener,noreferrer");
-      }
-    };
-    window.addEventListener("keydown", handleGithubKey);
-    return () => window.removeEventListener("keydown", handleGithubKey);
-  }, [isApp]);
 
   const handleOpenSettings = () => {
     setSpinKey((k) => k + 1);
@@ -102,39 +87,6 @@ export function Navbar({
           </>
         )}
         <ThemeToggle showShortcut={isApp} />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              onMouseEnter={() => setGithubHovered(true)}
-              onMouseLeave={() => setGithubHovered(false)}
-              aria-label="View on GitHub"
-            >
-              <a
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Github
-                  className={`h-4 w-4 transition-colors duration-200 ${
-                    githubHovered
-                      ? "text-[#6e5494]"
-                      : "text-muted-foreground"
-                  }`}
-                />
-              </a>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="flex items-center gap-1.5">
-            {isApp ? (
-              <>GitHub <Kbd>{modSymbol}</Kbd> + <Kbd>⇧</Kbd> + <Kbd>G</Kbd></>
-            ) : (
-              "GitHub"
-            )}
-          </TooltipContent>
-        </Tooltip>
         {isApp && (
           <>
             <KeyboardShortcuts />

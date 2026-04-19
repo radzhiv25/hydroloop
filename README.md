@@ -2,11 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/hydroloop.svg)](https://www.npmjs.com/package/hydroloop)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 A developer-friendly hydration tracker. Stay hydrated while you code.
 
-**Web App** | **CLI** | **Local-first** | **Open Source**
+**Web App** | **CLI** | **Local-first**
 
 ## Overview
 
@@ -47,9 +46,9 @@ See the full [CLI documentation](./cli/README.md) for all commands.
 
 ### Web App
 
+From your local project directory:
+
 ```bash
-git clone https://github.com/radzhiv25/hydroloop.git
-cd hydroloop
 npm install
 npm run dev
 ```
@@ -74,7 +73,7 @@ hydroloop start
 | Components | [Radix UI](https://radix-ui.com), [shadcn/ui](https://ui.shadcn.com) |
 | Charts | [Recharts](https://recharts.org) |
 | Animation | [Motion](https://motion.dev) |
-| CLI | [Commander](https://github.com/tj/commander.js), [Chalk](https://github.com/chalk/chalk) |
+| CLI | Commander, Chalk |
 
 ## Project Structure
 
@@ -107,7 +106,6 @@ hydroloop/
 | `⌘ G` | Open logs & goal |
 | `⌘ S` | Open settings |
 | `⌘ ⇧ T` | Toggle dark mode |
-| `⌘ ⇧ G` | Open GitHub |
 
 *On Windows/Linux, use `Ctrl` instead of `⌘`*
 
@@ -120,35 +118,18 @@ hydroloop/
 | `npm run start` | Run production server |
 | `npm run lint` | Run ESLint |
 
-## Contributing
+## Development
 
-Contributions are welcome! Here's how you can help:
+This codebase is proprietary. Setup and workflow are for authorized contributors only.
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feat/amazing-feature`)
-3. **Commit** your changes using [conventional commits](https://www.conventionalcommits.org/)
-   - `feat:` New features
-   - `fix:` Bug fixes
-   - `docs:` Documentation
-   - `style:` Formatting
-   - `refactor:` Code restructuring
-   - `chore:` Maintenance
-4. **Push** to your branch (`git push origin feat/amazing-feature`)
-5. **Open** a Pull Request
-
-### Development Setup
+### Local setup
 
 ```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/hydroloop.git
-cd hydroloop
-
-# Install dependencies
 npm install
-
-# Start dev server
 npm run dev
+```
 
+```bash
 # Run CLI locally
 cd cli && npm link
 hydroloop --help
@@ -163,7 +144,7 @@ A native mobile experience is **not shipped yet**; it is on the roadmap so you k
 - **Platforms** — The plan is iOS and Android via [React Native](https://reactnative.dev), so you get one consistent app on your phone, not just the website in a browser tab.
 - **Same spirit as the web app** — Local-first storage, quick logging (water, tea, coffee), goals, streaks, and charts comparable to what you use on desktop—optimized for small screens and touch.
 - **Why mobile matters** — Timely reminders and one-tap logging away from the keyboard, while your data stays oriented around privacy and device control (same philosophy as today’s web and CLI).
-- **Timeline** — There is no public release date yet; follow [Issues](https://github.com/radzhiv25/hydroloop/issues) and releases on GitHub for updates.
+- **Timeline** — There is no public release date yet; updates will be announced when available.
 
 **For contributors**
 
@@ -179,8 +160,7 @@ A native mobile experience is **not shipped yet**; it is on the roadmap so you k
 
 ## Contributors
 
-- [@radzhiv25](https://github.com/radzhiv25) — creator & maintainer
-- *Add your peer or collaborator here (name, role, optional GitHub link).*
+- radzhiv — creator & maintainer
 
 ## License
 
@@ -188,9 +168,7 @@ MIT - see [LICENSE](./LICENSE) for details.
 
 ## Links
 
-- [GitHub Repository](https://github.com/radzhiv25/hydroloop)
 - [CLI on npm](https://www.npmjs.com/package/hydroloop)
-- [Report Issues](https://github.com/radzhiv25/hydroloop/issues)
 
 ---
 

@@ -27,7 +27,6 @@ const getShortcuts = (mod: string) => [
   { keys: [mod, "S"], label: "Open settings drawer" },
   { keys: [mod, "C"], label: "Custom water entry" },
   { keys: [mod, "⇧", "T"], label: "Toggle light / dark mode" },
-  { keys: [mod, "⇧", "G"], label: "Open GitHub repository" },
 ];
 
 type KeyboardShortcutsProps = {

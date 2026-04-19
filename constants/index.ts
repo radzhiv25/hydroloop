@@ -1,5 +1,4 @@
 export const PRODUCT_NAME = "Hydroloop";
-export const GITHUB_URL = "https://github.com/radzhiv25/hydroloop";
 
 /** Shown on landing hero, settings, and splash for visibility. */
 export const MEASURED_BOTTLE_TIP =

@@ -3,14 +3,6 @@
   "version": "1.1.1",
   "private": true,
   "description": "Stay hydrated while you code - a developer-friendly hydration tracker",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/radzhiv25/hydroloop.git"
-  },
-  "homepage": "https://github.com/radzhiv25/hydroloop#readme",
-  "bugs": {
-    "url": "https://github.com/radzhiv25/hydroloop/issues"
-  },
   "author": "radzhiv",
   "license": "MIT",
   "workspaces": [

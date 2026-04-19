@@ -221,6 +221,4 @@ hydroloop status
 
 ## Links
 
-- [GitHub Repository](https://github.com/radzhiv25/hydroloop)
 - [Web App](https://hydroloop-seven.vercel.app)
-- [Report Issues](https://github.com/radzhiv25/hydroloop/issues)

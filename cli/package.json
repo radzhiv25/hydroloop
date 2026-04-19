@@ -28,12 +28,6 @@
   ],
   "author": "radzhiv",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/radzhiv25/hydroloop.git",
-    "directory": "cli"
-  },
-  "homepage": "https://github.com/radzhiv25/hydroloop#readme",
   "engines": {
     "node": ">=18"
   },
