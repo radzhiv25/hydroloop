@@ -222,3 +222,7 @@ hydroloop status
 ## Links
 
 - [Web App](https://hydroloop-seven.vercel.app)
+
+## License
+
+MIT

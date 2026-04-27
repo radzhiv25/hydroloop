@@ -120,8 +120,6 @@ hydroloop/
 
 ## Development
 
-This codebase is proprietary. Setup and workflow are for authorized contributors only.
-
 ### Local setup
 
 ```bash

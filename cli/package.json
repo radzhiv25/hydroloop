@@ -1,6 +1,6 @@
 {
   "name": "hydroloop",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Hydroloop - a developer-friendly hydration tracker for the terminal",
   "type": "module",
   "bin": {
