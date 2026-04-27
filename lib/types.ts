@@ -9,6 +9,8 @@ export type WeeklyDaySummary = {
   date: string; // YYYY-MM-DD
   water_consumed: number;
   daily_goal: number;
+  /** ml per drink segment id (water, tea, coffee, other, custom_*) — absent on legacy rows */
+  by_drink?: Record<string, number>;
 };
 
 export type TimeSpan = {

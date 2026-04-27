@@ -37,38 +37,27 @@ import {
   DEFAULT_CHART_TYPE,
   DEFAULT_COLOR_PALETTE,
 } from "@/constants/hydration";
+import {
+  aggregateLogsToSegments,
+  colorForUnknownSegment,
+  type DrinkSegment,
+} from "@/lib/drink-aggregation";
 
 function getPaletteColors(paletteId: string | undefined) {
   const id = paletteId && paletteId in COLOR_PALETTES ? paletteId : DEFAULT_COLOR_PALETTE;
   return COLOR_PALETTES[id] ?? COLOR_PALETTES.blue;
 }
 
-function buildChartConfig(colors: Record<string, string>) {
-  return {
-    ...Object.fromEntries(
-      DRINK_TYPES.map((t) => [t.id, { label: t.label, color: colors[t.id] ?? t.id }])
-    ),
-  } satisfies ChartConfig;
-}
-
-function aggregateByDrinkType(data: UserData | null): { name: string; value: number; id: string }[] {
-  if (!data?.logs?.length) {
-    return DRINK_TYPES.map((t) => ({ name: t.label, value: 0, id: t.id }));
-  }
-  const map = new Map<string, number>();
-  for (const log of data.logs) {
-    const type = log.drinkType ?? "water";
-    const key = DRINK_TYPES.some((t) => t.id === type) ? type : "other";
-    const existing = map.get(key) ?? 0;
-    map.set(key, existing + log.amount);
-  }
-  const hasAny = DRINK_TYPES.some((t) => (map.get(t.id) ?? 0) > 0);
-  if (!hasAny) return [{ name: "Water", value: 0, id: "water" }];
-  return DRINK_TYPES.map((t) => ({
-    name: t.label,
-    value: map.get(t.id) ?? 0,
-    id: t.id,
-  }));
+function buildChartConfig(segments: DrinkSegment[], colors: Record<string, string>) {
+  return Object.fromEntries(
+    segments.map((s) => [
+      s.id,
+      {
+        label: s.name,
+        color: colors[s.id] ?? colorForUnknownSegment(s.id),
+      },
+    ])
+  ) as ChartConfig;
 }
 
 type HydrationChartProps = {
@@ -86,7 +75,9 @@ export function HydrationChart({
   chartType = DEFAULT_CHART_TYPE,
   colorPalette = DEFAULT_COLOR_PALETTE,
 }: HydrationChartProps) {
-  const drinkData = aggregateByDrinkType(data);
+  const drinkData = data?.logs?.length
+    ? aggregateLogsToSegments(data.logs)
+    : (DRINK_TYPES.map((t) => ({ id: t.id, name: t.label, value: 0 })) satisfies DrinkSegment[]);
   const totalDrinks = drinkData.reduce((s, d) => s + d.value, 0);
   const maxSegment =
     drinkData.length > 0
@@ -103,7 +94,10 @@ export function HydrationChart({
   const colors = data?.custom_chart_colors
     ? { ...baseColors, ...data.custom_chart_colors }
     : baseColors;
-  const getColor = (id: string) => colors[id as keyof typeof colors] ?? colors.other;
+  const getColor = (id: string) =>
+    (colors as Record<string, string>)[id] ??
+    baseColors[id as keyof typeof baseColors] ??
+    colorForUnknownSegment(id);
 
   const chartData =
     totalDrinks > 0
@@ -114,7 +108,7 @@ export function HydrationChart({
   const maxVal = Math.max(1, ...drinkData.map((d) => d.value));
   const radarData = drinkData.map((d) => ({ subject: d.name, value: d.value, fullMark: maxVal, id: d.id }));
 
-  const config = buildChartConfig(colors);
+  const config = buildChartConfig(drinkData, Object.fromEntries(drinkData.map((d) => [d.id, getColor(d.id)])));
 
   const renderChart = () => {
     const chartHeight = 260;
@@ -122,9 +116,9 @@ export function HydrationChart({
 
     switch (chartType) {
       case "radial": {
-        const stackedRow = DRINK_TYPES.reduce(
-          (acc, t) => {
-            acc[t.id] = drinkData.find((d) => d.id === t.id)?.value ?? 0;
+        const stackedRow = drinkData.reduce(
+          (acc, d) => {
+            acc[d.id] = d.value;
             return acc;
           },
           {} as Record<string, number>
@@ -175,13 +169,13 @@ export function HydrationChart({
                   }}
                 />
               </PolarRadiusAxis>
-              {DRINK_TYPES.map((t) => (
+              {drinkData.map((d) => (
                 <RadialBar
-                  key={t.id}
-                  dataKey={t.id}
+                  key={d.id}
+                  dataKey={d.id}
                   stackId="a"
                   cornerRadius={5}
-                  fill={`var(--color-${t.id})`}
+                  fill={`var(--color-${d.id})`}
                   className="stroke-transparent stroke-2"
                 />
               ))}

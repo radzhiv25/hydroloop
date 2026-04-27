@@ -4,61 +4,60 @@ import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import type { UserData } from "@/lib/types";
 import { DRINK_TYPES } from "@/constants/hydration";
+import {
+  aggregateLogsToSegments,
+  colorForUnknownSegment,
+  type DrinkSegment,
+} from "@/lib/drink-aggregation";
 import { format } from "date-fns";
-
-const chartConfig = {
-  water: { label: "Water", color: "var(--chart-1)" },
-  tea: { label: "Tea", color: "var(--chart-2)" },
-  coffee: { label: "Coffee", color: "var(--chart-3)" },
-  other: { label: "Other", color: "var(--chart-4)" },
-} satisfies ChartConfig;
 
 type DrinksDonutProps = {
   data: UserData | null;
 };
 
-function aggregateByDrinkType(data: UserData | null): { name: string; value: number; id: string }[] {
+function donutSegments(data: UserData | null): DrinkSegment[] {
   if (!data?.logs?.length) {
-    return DRINK_TYPES.map((t) => ({ name: t.label, value: 0, id: t.id }));
+    return DRINK_TYPES.map((t) => ({ id: t.id, name: t.label, value: 0 }));
   }
-  const map = new Map<string, number>();
-  for (const log of data.logs) {
-    const type = log.drinkType ?? "water";
-    const key = type in chartConfig ? type : "other";
-    const existing = map.get(key) ?? 0;
-    map.set(key, existing + log.amount);
-  }
-  return DRINK_TYPES.map((t) => ({
-    name: t.label,
-    value: map.get(t.id) ?? 0,
-    id: t.id,
-  })).filter((d) => d.value > 0).length
-    ? DRINK_TYPES.map((t) => ({ name: t.label, value: map.get(t.id) ?? 0, id: t.id }))
-    : [{ name: "Water", value: 0, id: "water" }];
+  return aggregateLogsToSegments(data.logs);
+}
+
+function segmentFill(id: string): string {
+  const fromPalette = DRINK_TYPES.find((t) => t.id === id)?.color;
+  return fromPalette ?? colorForUnknownSegment(id);
+}
+
+function buildDonutConfig(segments: DrinkSegment[]): ChartConfig {
+  return Object.fromEntries(
+    segments.map((s) => [s.id, { label: s.name, color: segmentFill(s.id) }])
+  ) as ChartConfig;
 }
 
 export function DrinksDonut({ data }: DrinksDonutProps) {
-  const chartData = aggregateByDrinkType(data);
+  const chartData = donutSegments(data);
+  const chartConfig = buildDonutConfig(chartData);
   const total = chartData.reduce((s, d) => s + d.value, 0);
-  const maxSegment = chartData.reduce((a, b) => (a.value >= b.value ? a : b), chartData[0]);
+  const maxSegment =
+    chartData.length > 0 ? chartData.reduce((a, b) => (a.value >= b.value ? a : b), chartData[0]) : null;
   const percent = total > 0 && maxSegment ? Math.round((maxSegment.value / total) * 100) : 0;
+
+  const pieData =
+    total > 0
+      ? chartData.filter((d) => d.value > 0)
+      : [{ id: "water", name: "Water", value: 1 }];
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">
-          Other drinks
-        </span>
-        <span className="text-xs text-muted-foreground">
-          {format(new Date(), "MMMM yyyy")}
-        </span>
+        <span className="text-sm font-medium text-foreground">Other drinks</span>
+        <span className="text-xs text-muted-foreground">{format(new Date(), "MMMM yyyy")}</span>
       </div>
 
       <div className="relative mx-auto h-[200px] w-full max-w-[200px]">
         <ChartContainer config={chartConfig} className="h-full w-full aspect-square">
           <PieChart>
             <Pie
-              data={chartData}
+              data={pieData}
               dataKey="value"
               nameKey="name"
               cx="50%"
@@ -68,10 +67,9 @@ export function DrinksDonut({ data }: DrinksDonutProps) {
               paddingAngle={1}
               strokeWidth={0}
             >
-              {chartData.map((entry) => {
-                const color = DRINK_TYPES.find((t) => t.id === entry.id)?.color ?? "var(--chart-4)";
-                return <Cell key={entry.id} fill={color} />;
-              })}
+              {pieData.map((entry) => (
+                <Cell key={entry.id} fill={segmentFill(entry.id)} />
+              ))}
             </Pie>
             <Tooltip
               formatter={(value: number) => [`${value} ml`, ""]}
@@ -80,26 +78,23 @@ export function DrinksDonut({ data }: DrinksDonutProps) {
           </PieChart>
         </ChartContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-bold tabular-nums text-foreground">
-            {total}
-          </span>
+          <span className="text-2xl font-bold tabular-nums text-foreground">{total}</span>
           <span className="text-xs text-muted-foreground">ml total</span>
         </div>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-xs">
-        {chartData.filter((d) => d.value > 0).map((d) => {
-          const color = DRINK_TYPES.find((t) => t.id === d.id)?.color ?? "var(--chart-4)";
-          return (
+        {chartData
+          .filter((d) => d.value > 0)
+          .map((d) => (
             <div key={d.id} className="flex items-center gap-1.5">
               <div
                 className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: segmentFill(d.id) }}
               />
               <span className="text-muted-foreground">{d.name}</span>
             </div>
-          );
-        })}
+          ))}
       </div>
 
       {maxSegment && total > 0 && (
@@ -113,8 +108,7 @@ export function DrinksDonut({ data }: DrinksDonutProps) {
               className="h-full rounded-full transition-all duration-300"
               style={{
                 width: `${percent}%`,
-                backgroundColor:
-                  DRINK_TYPES.find((t) => t.id === maxSegment.id)?.color ?? "var(--chart-4)",
+                backgroundColor: segmentFill(maxSegment.id),
               }}
             />
           </div>

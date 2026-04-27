@@ -110,6 +110,7 @@ function makeLandingSample() {
     { time: "10:45", amount: 200, drinkType: "tea" },
     { time: "12:10", amount: 250, drinkType: "water" },
     { time: "14:05", amount: 180, drinkType: "coffee" },
+    { time: "15:00", amount: 120, drinkType: "Kombucha" },
     { time: "16:30", amount: 300, drinkType: "water" },
     { time: "18:15", amount: 270, drinkType: "water" },
   ];
@@ -142,10 +143,21 @@ function makeLandingSample() {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(base);
     d.setDate(base.getDate() - i);
+    const total = 1600 + (6 - i) * 120;
+    const water = Math.round(total * 0.52);
+    const tea = Math.round(total * 0.2);
+    const coffee = Math.round(total * 0.12);
+    const kombucha = Math.max(0, total - water - tea - coffee);
     weeklyHistory.push({
       date: yyyyMmDd(d),
       daily_goal: 2500,
-      water_consumed: 1600 + (6 - i) * 120,
+      water_consumed: total,
+      by_drink: {
+        water,
+        tea,
+        coffee,
+        ...(kombucha > 0 ? { custom_kombucha: kombucha } : {}),
+      },
     });
   }
 

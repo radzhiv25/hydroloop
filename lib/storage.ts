@@ -15,6 +15,7 @@ import {
   DEFAULT_COLOR_PALETTE,
 } from "@/constants/hydration";
 import { normalizeReminderDays } from "@/lib/reminder-weekdays";
+import { aggregateLogsToRecord } from "@/lib/drink-aggregation";
 
 /** Removes all app data from IndexedDB (user data, streaks, weekly history). */
 export async function clearAllData(): Promise<void> {
@@ -166,6 +167,7 @@ export function resetDailyData(data: UserData): UserData {
     date: data.date,
     water_consumed: data.water_consumed,
     daily_goal: data.daily_goal,
+    by_drink: aggregateLogsToRecord(data.logs),
   });
   return {
     ...data,
