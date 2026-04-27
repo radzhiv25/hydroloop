@@ -70,12 +70,18 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+function isPresetGoal(goal: number | undefined): boolean {
+  if (goal == null) return true;
+  return (DAILY_GOAL_PRESETS as readonly number[]).includes(goal);
+}
+
 type SettingsSidebarProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data: UserData | null;
   onSave: (updates: Partial<UserData>) => void;
   onLiveColorUpdate?: (updates: Partial<UserData>) => void;
+  onLiveReminderUpdate?: (updates: Partial<UserData>) => void;
   onDataCleared?: () => void;
 };
 
@@ -85,6 +91,7 @@ export function SettingsSidebar({
   data,
   onSave,
   onLiveColorUpdate,
+  onLiveReminderUpdate,
   onDataCleared,
 }: SettingsSidebarProps) {
   const { register, handleSubmit, setValue, watch, reset } = useForm<FormValues>(
@@ -115,6 +122,7 @@ export function SettingsSidebar({
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [soundUploading, setSoundUploading] = useState(false);
   const [soundUploadError, setSoundUploadError] = useState<string | null>(null);
+  const [showCustomGoal, setShowCustomGoal] = useState(false);
   const previewStopRef = useRef<(() => void) | null>(null);
   const skipSoundOnNextChangeRef = useRef(false);
   const reminderInterval = watch("reminder_interval");
@@ -171,8 +179,13 @@ export function SettingsSidebar({
   }, [open, stopPreview]);
 
   useEffect(() => {
+    setShowCustomGoal(!isPresetGoal(dailyGoal));
+  }, [dailyGoal]);
+
+  useEffect(() => {
     if (open && data) {
       skipSoundOnNextChangeRef.current = true;
+      setShowCustomGoal(!isPresetGoal(data.daily_goal));
       reset({
         name: data.name,
         profileImage: data.profileImage,
@@ -358,6 +371,10 @@ export function SettingsSidebar({
                 onValueChange={(v) => {
                   setValue("reminder_sound", v);
                   setSoundUploadError(null);
+                  onLiveReminderUpdate?.({
+                    reminder_sound: v,
+                    custom_sound_url: v === REMINDER_SOUND_CUSTOM ? (watch("custom_sound_url")?.trim() || undefined) : undefined,
+                  });
                   stopPreview();
                   if (skipSoundOnNextChangeRef.current) return;
                   const customUrl = v === REMINDER_SOUND_CUSTOM ? watch("custom_sound_url") : undefined;
@@ -416,6 +433,10 @@ export function SettingsSidebar({
                       setSoundUploading(false);
                       if (result.ok) {
                         setValue("custom_sound_url", result.url);
+                        onLiveReminderUpdate?.({
+                          reminder_sound: REMINDER_SOUND_CUSTOM,
+                          custom_sound_url: result.url,
+                        });
                         stopPreview();
                         const duration = watch("reminder_sound_duration_seconds") ?? DEFAULT_REMINDER_SOUND_DURATION;
                         previewStopRef.current = playReminderSoundForDuration(REMINDER_SOUND_CUSTOM, duration, result.url);
@@ -444,7 +465,10 @@ export function SettingsSidebar({
                 max={MAX_REMINDER_SOUND_DURATION}
                 step={1}
                 value={[reminderSoundDuration]}
-                onValueChange={([v]) => setValue("reminder_sound_duration_seconds", v)}
+                onValueChange={([v]) => {
+                  setValue("reminder_sound_duration_seconds", v);
+                  onLiveReminderUpdate?.({ reminder_sound_duration_seconds: v });
+                }}
               />
               <span className="min-w-[2rem] text-xs tabular-nums">
                 {reminderSoundDuration}s
@@ -463,24 +487,40 @@ export function SettingsSidebar({
                   type="button"
                   variant={(dailyGoal ?? 2500) === preset ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setValue("daily_goal", preset)}
+                  onClick={() => {
+                    setValue("daily_goal", preset);
+                    setShowCustomGoal(false);
+                  }}
                 >
                   {preset} ml
                 </Button>
               ))}
+              <Button
+                type="button"
+                variant={showCustomGoal ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setShowCustomGoal(true);
+                  if (!dailyGoal) setValue("daily_goal", MIN_DAILY_GOAL);
+                }}
+              >
+                Custom
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <Slider
-                min={MIN_DAILY_GOAL}
-                max={MAX_DAILY_GOAL}
-                step={250}
-                value={[dailyGoal ?? 2500]}
-                onValueChange={([v]) => setValue("daily_goal", v)}
-              />
-              <span className="min-w-[3rem] text-xs tabular-nums">
-                {dailyGoal ?? 2500} ml
-              </span>
-            </div>
+            {showCustomGoal && (
+              <div className="flex items-center gap-2">
+                <Slider
+                  min={MIN_DAILY_GOAL}
+                  max={MAX_DAILY_GOAL}
+                  step={100}
+                  value={[dailyGoal ?? MIN_DAILY_GOAL]}
+                  onValueChange={([v]) => setValue("daily_goal", v)}
+                />
+                <span className="min-w-[3rem] text-xs tabular-nums">
+                  {dailyGoal ?? MIN_DAILY_GOAL} ml
+                </span>
+              </div>
+            )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="settings-chart_type">Graph type</Label>

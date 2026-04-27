@@ -120,6 +120,9 @@ export function MainPage() {
         onLiveColorUpdate={(updates) => {
           updateSettings(updates);
         }}
+        onLiveReminderUpdate={(updates) => {
+          updateSettings(updates);
+        }}
         onDataCleared={() => {
           refetch();
           setWelcomeOpen(true);
