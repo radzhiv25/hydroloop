@@ -13,11 +13,11 @@ import {
 
 function ChangelogList({ releases }: { releases: ChangelogRelease[] }) {
   return (
-    <section className="space-y-6">
+    <section className="space-y-4">
       {releases.map((release) => (
         <article
           key={release.version}
-          className="rounded-lg border bg-card p-4 shadow-sm space-y-2"
+          className="border bg-card p-4 shadow-sm space-y-2"
         >
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-lg font-medium">Version {release.version}</h2>
@@ -42,7 +42,7 @@ export default function ChangelogPage() {
       <Navbar variant="site" />
 
       <main className="mx-auto w-full flex-1 px-4 py-8 sm:py-12">
-        <div className="mx-auto max-w-3xl space-y-8">
+        <div className="mx-auto space-y-8">
           <header className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Changelog
@@ -50,12 +50,12 @@ export default function ChangelogPage() {
             <p className="text-sm text-muted-foreground">
               Notable changes to the web app and CLI.
             </p>
-            <Link
+            {/* <Link
               href="/app"
               className="inline-flex text-sm text-primary underline underline-offset-4"
             >
               ← Back to app
-            </Link>
+            </Link> */}
           </header>
 
           <Tabs value={tab} onValueChange={setTab} className="w-full">

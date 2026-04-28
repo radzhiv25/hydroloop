@@ -11,6 +11,32 @@ export type ChangelogRelease = {
 
 export const webChangelog: ChangelogRelease[] = [
   {
+    version: "1.1.2",
+    date: "2026-04",
+    items: [
+      "Added: shared drink aggregation for built-in and custom drink types across dashboard charts.",
+      "Added: per-drink weekly snapshot data and persistent detailed log history by date.",
+      "Added: custom daily goal mode in Settings with 100ml slider steps up to 5000ml.",
+      "Added: custom drink presets in Settings, surfaced as quick-add tabs in the dashboard.",
+      "Added: custom 404 page with hydration-themed copy and quick actions back to home/app.",
+      "Updated: weekly summary to combine stacked drink composition with goal-reach tiers.",
+      "Updated: reminder sound selections and duration to persist live from Settings.",
+      "Updated: landing navigation now includes a direct Changelog link for easier discovery.",
+      "Changed: weekly goal chip labels now use actual dates to avoid day mismatches.",
+      "Changed: dashboard quick-add tab ordering to show custom presets before the Other tab.",
+      "Changed: theme toggle moved to the far right in navbar actions.",
+    ],
+  },
+  {
+    version: "1.1.1",
+    date: "2026-04",
+    items: [
+      "Added: weekday-based reminder scheduling with selectable reminder days.",
+      "Updated: measured-bottle guidance text across splash and settings copy.",
+      "Changed: removed GitHub references from app and package metadata.",
+    ],
+  },
+  {
     version: "1.1.0",
     date: "2026-03",
     items: [
@@ -30,6 +56,14 @@ export const webChangelog: ChangelogRelease[] = [
 ];
 
 export const cliChangelog: ChangelogRelease[] = [
+  {
+    version: "0.1.4",
+    date: "2026-04",
+    items: [
+      "Updated: package version bumped to 0.1.4 for latest release alignment.",
+      "Updated: CLI README documentation refreshed with current release wording.",
+    ],
+  },
   {
     version: "0.1.3",
     date: "2026-03",
