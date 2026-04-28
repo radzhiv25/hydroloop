@@ -1,14 +1,10 @@
 import Link from "next/link";
-import { Droplets } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function NotFoundPage() {
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
-      <section className="w-full max-w-lg bg-card p-6 text-center">
-        {/* <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted">
-          <Droplets className="h-5 w-5 text-primary" />
-        </div> */}
+    <main className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex min-h-screen w-screen items-center justify-center bg-background px-4 py-12">
+      <section className="w-full max-w-lg bg-background/95 p-6 text-center">
 
         <p className="text-5xl font-medium text-muted-foreground">404</p>
         <h1 className="mt-2 text-xl font-semibold text-foreground">What were you thinking?</h1>
