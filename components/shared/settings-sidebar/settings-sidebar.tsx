@@ -66,6 +66,7 @@ const schema = z.object({
   custom_tea: z.string().optional(),
   custom_coffee: z.string().optional(),
   custom_other: z.string().optional(),
+  custom_drink_presets: z.array(z.string()).default([]),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -114,6 +115,7 @@ export function SettingsSidebar({
             custom_tea: data.custom_chart_colors?.tea ?? "",
             custom_coffee: data.custom_chart_colors?.coffee ?? "",
             custom_other: data.custom_chart_colors?.other ?? "",
+            custom_drink_presets: data.custom_drink_presets ?? [],
           }
         : undefined,
     }
@@ -123,6 +125,7 @@ export function SettingsSidebar({
   const [soundUploading, setSoundUploading] = useState(false);
   const [soundUploadError, setSoundUploadError] = useState<string | null>(null);
   const [showCustomGoal, setShowCustomGoal] = useState(false);
+  const [newCustomDrink, setNewCustomDrink] = useState("");
   const previewStopRef = useRef<(() => void) | null>(null);
   const skipSoundOnNextChangeRef = useRef(false);
   const reminderInterval = watch("reminder_interval");
@@ -147,6 +150,7 @@ export function SettingsSidebar({
   const customTea = watch("custom_tea");
   const customCoffee = watch("custom_coffee");
   const customOther = watch("custom_other");
+  const customDrinkPresets = watch("custom_drink_presets") ?? [];
   const effectiveColors = {
     water: customWater?.trim() || palette.water,
     tea: customTea?.trim() || palette.tea,
@@ -203,6 +207,7 @@ export function SettingsSidebar({
         custom_tea: data.custom_chart_colors?.tea ?? "",
         custom_coffee: data.custom_chart_colors?.coffee ?? "",
         custom_other: data.custom_chart_colors?.other ?? "",
+        custom_drink_presets: data.custom_drink_presets ?? [],
       });
       const t = setTimeout(() => {
         skipSoundOnNextChangeRef.current = false;
@@ -246,8 +251,26 @@ export function SettingsSidebar({
         ? v.color_palette
         : DEFAULT_COLOR_PALETTE) as ColorPaletteId,
       custom_chart_colors,
+      custom_drink_presets: (v.custom_drink_presets ?? []).map((s) => s.trim()).filter(Boolean),
     });
     onOpenChange(false);
+  };
+
+  const addCustomDrinkPreset = () => {
+    const next = newCustomDrink.trim();
+    if (!next) return;
+    const exists = customDrinkPresets.some((d) => d.trim().toLowerCase() === next.toLowerCase());
+    if (exists) return;
+    setValue("custom_drink_presets", [...customDrinkPresets, next], { shouldDirty: true });
+    setNewCustomDrink("");
+  };
+
+  const removeCustomDrinkPreset = (name: string) => {
+    setValue(
+      "custom_drink_presets",
+      customDrinkPresets.filter((d) => d !== name),
+      { shouldDirty: true }
+    );
   };
 
   if (!open) return null;
@@ -539,6 +562,45 @@ export function SettingsSidebar({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Quick add custom drinks</Label>
+            <p className="text-[10px] text-muted-foreground">
+              Add drinks you log often so they appear as quick-add tabs.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                value={newCustomDrink}
+                onChange={(e) => setNewCustomDrink(e.target.value)}
+                placeholder="e.g. Green Tea"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomDrinkPreset();
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={addCustomDrinkPreset}>
+                Add
+              </Button>
+            </div>
+            {customDrinkPresets.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {customDrinkPresets.map((name) => (
+                  <Button
+                    key={name}
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => removeCustomDrinkPreset(name)}
+                  >
+                    {name}
+                    <X className="h-3 w-3" />
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="grid gap-2">
             <Label>Chart colors</Label>

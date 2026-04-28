@@ -138,7 +138,7 @@ export function HydrationDashboard({
       </section>
 
       <section>
-        <QuickAddWater onAdd={addWater} />
+        <QuickAddWater onAdd={addWater} customDrinkPresets={data.custom_drink_presets} />
       </section>
 
       <section>

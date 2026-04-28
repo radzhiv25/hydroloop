@@ -1,9 +1,10 @@
-import type { UserData, WaterLogEntry, WeeklyDaySummary, ChartType } from "./types";
+import type { UserData, WaterLogEntry, WeeklyDaySummary, ChartType, DetailedLogHistory } from "./types";
 import { kvGet, kvRemove, kvSet } from "./db";
 import {
   STORAGE_KEY,
   STREAK_HISTORY_KEY,
   WEEKLY_HISTORY_KEY,
+  DETAILED_LOG_HISTORY_KEY,
   WEEKLY_HISTORY_DAYS,
   DEFAULT_DAILY_GOAL,
   DEFAULT_TIME_SPAN,
@@ -24,6 +25,7 @@ export async function clearAllData(): Promise<void> {
     kvRemove(STORAGE_KEY),
     kvRemove(STREAK_HISTORY_KEY),
     kvRemove(WEEKLY_HISTORY_KEY),
+    kvRemove(DETAILED_LOG_HISTORY_KEY),
   ]);
 }
 
@@ -47,6 +49,7 @@ function createDefaultData(date: string): UserData {
     date,
     chart_type: DEFAULT_CHART_TYPE,
     color_palette: DEFAULT_COLOR_PALETTE,
+    custom_drink_presets: [],
   };
 }
 
@@ -119,6 +122,33 @@ export async function getWeeklyHistory(): Promise<WeeklyDaySummary[]> {
   }
 }
 
+export async function getDetailedLogHistory(): Promise<DetailedLogHistory> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = await kvGet(DETAILED_LOG_HISTORY_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as DetailedLogHistory;
+  } catch {
+    return {};
+  }
+}
+
+async function setDetailedLogHistory(history: DetailedLogHistory): Promise<void> {
+  if (typeof window === "undefined") return;
+  await kvSet(DETAILED_LOG_HISTORY_KEY, JSON.stringify(history));
+}
+
+async function persistDetailedLogsForDay(date: string, logs: WaterLogEntry[]): Promise<void> {
+  if (!date || logs.length === 0) return;
+  try {
+    const history = await getDetailedLogHistory();
+    history[date] = logs.map((entry) => ({ ...entry }));
+    await setDetailedLogHistory(history);
+  } catch {
+    // ignore
+  }
+}
+
 async function pushWeeklyHistory(day: WeeklyDaySummary): Promise<void> {
   if (typeof window === "undefined") return;
   try {
@@ -163,6 +193,7 @@ export function deleteLog(data: UserData, index: number): UserData {
 export function resetDailyData(data: UserData): UserData {
   const today = getTodayISO();
   if (data.logs.length > 0) void markDayAsLogged(data.date);
+  if (data.logs.length > 0) void persistDetailedLogsForDay(data.date, data.logs);
   void pushWeeklyHistory({
     date: data.date,
     water_consumed: data.water_consumed,

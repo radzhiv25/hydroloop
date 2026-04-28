@@ -5,6 +5,9 @@ export type WaterLogEntry = {
   drinkType?: string;
 };
 
+/** Date-indexed historical detailed logs (YYYY-MM-DD -> entry list). */
+export type DetailedLogHistory = Record<string, WaterLogEntry[]>;
+
 export type WeeklyDaySummary = {
   date: string; // YYYY-MM-DD
   water_consumed: number;
@@ -57,4 +60,6 @@ export type UserData = {
     coffee?: string;
     other?: string;
   };
+  /** Frequently used custom drinks shown as quick-add tabs. */
+  custom_drink_presets?: string[];
 };

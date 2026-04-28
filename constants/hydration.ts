@@ -1,6 +1,7 @@
 export const STORAGE_KEY = "hydroloop_user_data";
 export const STREAK_HISTORY_KEY = "hydroloop_streak_history";
 export const WEEKLY_HISTORY_KEY = "hydroloop_weekly_history";
+export const DETAILED_LOG_HISTORY_KEY = "hydroloop_detailed_log_history";
 export const WEEKLY_HISTORY_DAYS = 7;
 
 /** Blue-shade palette for charts (like Browser Share reference: one hue, varying lightness) */

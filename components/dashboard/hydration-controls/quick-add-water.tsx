@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Droplets, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,17 +19,63 @@ import { QUICK_ADD_AMOUNTS, DRINK_TYPES } from "@/constants/hydration";
 type QuickAddWaterProps = {
   /** (amount, time?, drinkType?) */
   onAdd: (amount: number, time?: string, drinkType?: string) => void;
+  customDrinkPresets?: string[];
 };
 
-export function QuickAddWater({ onAdd }: QuickAddWaterProps) {
+type QuickDrinkOption = {
+  value: string;
+  label: string;
+  defaultAmount: number;
+  isCustom: boolean;
+};
+
+const CUSTOM_PREFIX = "custom:";
+
+function optionFromValue(value: string): { drinkType: string; isCustom: boolean } {
+  if (value.startsWith(CUSTOM_PREFIX)) {
+    return { drinkType: value.slice(CUSTOM_PREFIX.length), isCustom: true };
+  }
+  return { drinkType: value, isCustom: false };
+}
+
+export function QuickAddWater({ onAdd, customDrinkPresets = [] }: QuickAddWaterProps) {
+  const customOptions: QuickDrinkOption[] = customDrinkPresets
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .map((name) => ({
+      value: `${CUSTOM_PREFIX}${name}`,
+      label: name,
+      defaultAmount: 250,
+      isCustom: true,
+    }));
+  const baseOptions = DRINK_TYPES.map((t) => ({
+    value: t.id,
+    label: t.label,
+    defaultAmount: t.defaultAmount,
+    isCustom: false,
+  }));
+  const nonOtherBase = baseOptions.filter((t) => t.value !== "other");
+  const otherBase = baseOptions.filter((t) => t.value === "other");
+  const tabOptions: QuickDrinkOption[] = [
+    ...nonOtherBase,
+    ...customOptions,
+    ...otherBase,
+  ];
   const [customOpen, setCustomOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState("250");
   const [selectedType, setSelectedType] = useState<string>("water");
   const [customType, setCustomType] = useState<string>("water");
   const [customName, setCustomName] = useState("");
 
+  useEffect(() => {
+    if (!tabOptions.some((opt) => opt.value === selectedType)) {
+      setSelectedType("water");
+    }
+  }, [tabOptions, selectedType]);
+
   const handleAdd = (amount: number, drinkType?: string) => {
-    onAdd(amount, undefined, drinkType ?? selectedType);
+    const resolved = drinkType ?? optionFromValue(selectedType).drinkType;
+    onAdd(amount, undefined, resolved);
   };
 
   const handleCustomSubmit = () => {
@@ -47,7 +93,8 @@ export function QuickAddWater({ onAdd }: QuickAddWaterProps) {
     }
   };
 
-  const defaultAmountForType = DRINK_TYPES.find((t) => t.id === selectedType)?.defaultAmount ?? 250;
+  const selectedOption = tabOptions.find((t) => t.value === selectedType);
+  const defaultAmountForType = selectedOption?.defaultAmount ?? 250;
 
   return (
     <div className="flex flex-col gap-3">
@@ -55,9 +102,9 @@ export function QuickAddWater({ onAdd }: QuickAddWaterProps) {
         Quick add
       </p>
       <Tabs value={selectedType} onValueChange={setSelectedType} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          {DRINK_TYPES.map((t) => (
-            <TabsTrigger key={t.id} value={t.id} className="text-xs">
+        <TabsList className="flex h-auto w-full flex-wrap gap-1">
+          {tabOptions.map((t) => (
+            <TabsTrigger key={t.value} value={t.value} className="text-xs">
               {t.label}
             </TabsTrigger>
           ))}
@@ -86,7 +133,14 @@ export function QuickAddWater({ onAdd }: QuickAddWaterProps) {
             variant="outline"
             size="sm"
             onClick={() => {
-              setCustomType(selectedType);
+              const selected = optionFromValue(selectedType);
+              if (selected.isCustom) {
+                setCustomType("other");
+                setCustomName(selected.drinkType);
+              } else {
+                setCustomType(selected.drinkType);
+                setCustomName("");
+              }
               setCustomAmount(String(defaultAmountForType));
               setCustomOpen(true);
             }}
