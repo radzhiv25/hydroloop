@@ -86,7 +86,6 @@ export function Navbar({
             </div>
           </>
         )}
-        <ThemeToggle showShortcut={isApp} />
         {isApp && (
           <>
             <KeyboardShortcuts />
@@ -110,16 +109,22 @@ export function Navbar({
           </>
         )}
         {!isApp && (
-          onOpenApp ? (
-            <Button variant="outline" size="sm" onClick={onOpenApp}>
-              Open app
+          <>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/changelog">Changelog</Link>
             </Button>
-          ) : (
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/app">Open app</Link>
-            </Button>
-          )
+            {onOpenApp ? (
+              <Button variant="outline" size="sm" onClick={onOpenApp}>
+                Open app
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/app">Open app</Link>
+              </Button>
+            )}
+          </>
         )}
+        <ThemeToggle showShortcut={isApp} />
       </div>
     </header>
   );
