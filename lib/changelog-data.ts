@@ -14,9 +14,7 @@ export const webChangelog: ChangelogRelease[] = [
     version: "1.2.2",
     date: "2026-05",
     items: [
-      "Added: cloud-to-local hydration sync on app load so Supabase logs/settings are read into IndexedDB for dashboard rendering.",
-      "Added: centralized cloud sync module to map hydration_logs into daily local logs, streak history, and weekly summaries.",
-      "Updated: hydration hook load sequence to pull remote data before local reset/persist behavior.",
+      "Hydroloop now syncs Supabase hydration data back into local IndexedDB on app load so dashboard reads reflect cloud writes (including CLI activity), while signup/auth flows use a canonical app URL for redirects and handle duplicate-username plus `unexpected_failure` database responses with clearer user-facing error messages.",
     ],
   },
   {

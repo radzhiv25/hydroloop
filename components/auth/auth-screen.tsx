@@ -52,6 +52,35 @@ type LoginFormProps = {
   onChange: (next: Partial<LoginFormData>) => void
 }
 
+const DEFAULT_APP_URL = "https://loophydro.vercel.app"
+
+function getAppBaseUrl() {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (fromEnv) return fromEnv.replace(/\/+$/, "")
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin.replace(/\/+$/, "")
+  }
+  return DEFAULT_APP_URL
+}
+
+function getSignupErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") return "Signup failed"
+  const maybeCode = "code" in error ? String(error.code ?? "") : ""
+  const maybeMessage = "message" in error ? String(error.message ?? "") : ""
+  const lower = maybeMessage.toLowerCase()
+
+  if (
+    maybeCode === "unexpected_failure" ||
+    lower.includes("database error saving new user") ||
+    lower.includes("duplicate key") ||
+    lower.includes("username")
+  ) {
+    return "Username already exists. Please choose another one."
+  }
+
+  return maybeMessage || "Signup failed"
+}
+
 function AuthSubmitButton({ label, disabled = false }: AuthSubmitButtonProps) {
   const [hovered, setHovered] = useState(false)
 
@@ -351,9 +380,22 @@ export function AuthScreen() {
     })
   }
 
+  async function usernameExists(username: string) {
+    const clean = username.trim()
+    if (!clean) return false
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", clean)
+      .limit(1)
+
+    if (error) return false
+    return (data?.length ?? 0) > 0
+  }
+
   const handleGoogleSignin = async () => {
     setLoading(true)
-    const redirectTo = `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`
+    const redirectTo = `${getAppBaseUrl()}/auth?next=${encodeURIComponent(nextPath)}`
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo },
@@ -415,33 +457,53 @@ export function AuthScreen() {
       return
     }
     const recommendedGoalMl = parsedWeight != null ? recommendedGoalFromWeight(parsedWeight) : null
+    const username = signupData.username.trim()
 
     try {
       setLoading(true)
+      if (username) {
+        const exists = await usernameExists(username)
+        if (exists) {
+          toast.error("Username already exists. Please choose another one.")
+          setLoading(false)
+          return
+        }
+      }
       const { data, error } = await supabase.auth.signUp({
         email: signupData.email.trim(),
         password: signupData.password,
         options: {
           data: {
             full_name: signupData.name.trim(),
-            username: signupData.username.trim() || null,
+            username: username || null,
             weight_kg: parsedWeight,
           },
-          emailRedirectTo: `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`,
+          emailRedirectTo: `${getAppBaseUrl()}/auth?next=${encodeURIComponent(nextPath)}`,
         },
       })
       if (error) {
-        toast.error(error.message || "Signup failed")
+        toast.error(getSignupErrorMessage(error))
         setLoading(false)
         return
       }
 
       if (data.user?.id) {
-        await upsertProfileFromUser(data.user.id, {
-          display_name: signupData.name.trim(),
-          username: signupData.username.trim() || undefined,
-          weight_kg: parsedWeight,
-        })
+        try {
+          await upsertProfileFromUser(data.user.id, {
+            display_name: signupData.name.trim(),
+            username: username || undefined,
+            weight_kg: parsedWeight,
+          })
+        } catch (profileError) {
+          const message =
+            profileError instanceof Error ? profileError.message.toLowerCase() : ""
+          if (message.includes("duplicate key") || message.includes("username")) {
+            toast.error("Username already exists. Please choose another one.")
+            setLoading(false)
+            return
+          }
+          throw profileError
+        }
       }
 
       toast.success("Account created. Check your email if verification is enabled.")
@@ -458,8 +520,7 @@ export function AuthScreen() {
       }
       setLoading(false)
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Signup failed"
-      toast.error(message)
+      toast.error(getSignupErrorMessage(error))
       setLoading(false)
     }
   }
