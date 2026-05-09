@@ -11,6 +11,16 @@ export type ChangelogRelease = {
 
 export const webChangelog: ChangelogRelease[] = [
   {
+    version: "1.2.1",
+    date: "2026-05",
+    items: [
+      "Added: Settings -> Connect CLI section to generate one-time CLI login tokens and copy them quickly.",
+      "Added: /api/cli/auth/token and /api/cli/auth/exchange route handlers for secure token-based CLI session handoff.",
+      "Changed: replaced middleware convention with proxy.ts to align with Next.js 16 file convention.",
+      "Fixed: /auth static prerender by wrapping search-params usage under Suspense in app/auth/page.tsx.",
+    ],
+  },
+  {
     version: "1.2.0",
     date: "2026-05",
     items: [
@@ -67,6 +77,16 @@ export const webChangelog: ChangelogRelease[] = [
 ];
 
 export const cliChangelog: ChangelogRelease[] = [
+  {
+    version: "0.1.7",
+    date: "2026-05",
+    items: [
+      "Added: update command to edit the latest or a specific local hydration entry (with --id).",
+      "Added: token-based auth login flow (hydroloop auth login --token <token>) sourced from the web app.",
+      "Changed: remote queue sync now upserts conflicted rows so updated entries can propagate to cloud.",
+      "Updated: help/docs for token login flow and CLI-cloud sync usage.",
+    ],
+  },
   {
     version: "0.1.6",
     date: "2026-05",
