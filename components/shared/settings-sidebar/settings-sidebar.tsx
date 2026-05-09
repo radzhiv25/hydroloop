@@ -40,7 +40,7 @@ import { MEASURED_BOTTLE_TIP } from "@/constants";
 import { normalizeReminderDays } from "@/lib/reminder-weekdays";
 import { uploadSoundToCloudinary } from "@/lib/cloudinary";
 import { playReminderSoundForDuration } from "@/hooks/useReminder";
-import { Trash2, Palette, Volume2, X, Upload, Loader2 } from "lucide-react";
+import { Trash2, Palette, Volume2, X, Upload, Loader2, KeyRound, Copy, Check } from "lucide-react";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
@@ -135,6 +135,10 @@ export function SettingsSidebar({
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationProgress, setMigrationProgress] = useState(0);
   const [migrationDone, setMigrationDone] = useState(false);
+  const [cliToken, setCliToken] = useState<string | null>(null);
+  const [cliTokenExpiresAt, setCliTokenExpiresAt] = useState<string | null>(null);
+  const [isGeneratingCliToken, setIsGeneratingCliToken] = useState(false);
+  const [copiedCliToken, setCopiedCliToken] = useState(false);
   const previewStopRef = useRef<(() => void) | null>(null);
   const skipSoundOnNextChangeRef = useRef(false);
   const reminderInterval = watch("reminder_interval");
@@ -365,6 +369,40 @@ export function SettingsSidebar({
       toast.error(message);
     } finally {
       setIsMigrating(false);
+    }
+  };
+
+  const handleGenerateCliToken = async () => {
+    if (isGeneratingCliToken) return;
+    setIsGeneratingCliToken(true);
+    setCopiedCliToken(false);
+
+    try {
+      const response = await fetch("/api/cli/auth/token", { method: "POST" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.token) {
+        throw new Error(payload?.error || `Failed to generate token (${response.status})`);
+      }
+      setCliToken(payload.token);
+      setCliTokenExpiresAt(payload.expiresAt ?? null);
+      toast.success("CLI token generated (valid for ~10 minutes)");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to generate CLI token";
+      toast.error(message);
+    } finally {
+      setIsGeneratingCliToken(false);
+    }
+  };
+
+  const handleCopyCliToken = async () => {
+    if (!cliToken) return;
+    try {
+      await navigator.clipboard.writeText(cliToken);
+      setCopiedCliToken(true);
+      setTimeout(() => setCopiedCliToken(false), 1200);
+      toast.success("CLI token copied");
+    } catch {
+      toast.error("Could not copy token");
     }
   };
 
@@ -891,6 +929,46 @@ export function SettingsSidebar({
               )}
             </div>
           )}
+
+          <div className="border-t border-border pt-6">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">
+              Connect CLI
+            </p>
+            <p className="mb-3 text-[11px] text-muted-foreground">
+              Generate a one-time token and run <span className="font-mono">hydroloop auth login --token &lt;token&gt;</span>.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGenerateCliToken}
+                disabled={isGeneratingCliToken}
+              >
+                <KeyRound className="mr-2 h-4 w-4" />
+                {isGeneratingCliToken ? "Generating..." : "Generate CLI token"}
+              </Button>
+              {cliToken && (
+                <Button type="button" variant="outline" onClick={handleCopyCliToken}>
+                  {copiedCliToken ? (
+                    <Check className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Copy className="mr-2 h-4 w-4" />
+                  )}
+                  {copiedCliToken ? "Copied" : "Copy token"}
+                </Button>
+              )}
+            </div>
+            {cliToken && (
+              <div className="mt-3 rounded-md border border-border bg-muted/30 p-2">
+                <p className="break-all font-mono text-[11px]">{cliToken}</p>
+                {cliTokenExpiresAt && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Expires: {new Date(cliTokenExpiresAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="border-t border-border pt-6">
             <p className="mb-2 text-xs font-medium text-muted-foreground">
