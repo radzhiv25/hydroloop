@@ -19,7 +19,7 @@ const program = new Command();
 program
   .name("hydroloop")
   .description("Hydroloop - a developer-friendly hydration tracker for the terminal")
-  .version("0.1.5");
+  .version("0.1.6");
 
 addCommand(program);
 statusCommand(program);

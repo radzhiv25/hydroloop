@@ -68,6 +68,13 @@ export const webChangelog: ChangelogRelease[] = [
 
 export const cliChangelog: ChangelogRelease[] = [
   {
+    version: "0.1.6",
+    date: "2026-05",
+    items: [
+      "Fixed: package.json bin path for npm 11+ validators (relative path without `./` — avoids bin being stripped at publish time).",
+    ],
+  },
+  {
     version: "0.1.5",
     date: "2026-05",
     items: [
