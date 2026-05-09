@@ -11,6 +11,17 @@ export type ChangelogRelease = {
 
 export const webChangelog: ChangelogRelease[] = [
   {
+    version: "1.2.0",
+    date: "2026-05",
+    items: [
+      "Added: Supabase authentication (email/password and Google) with /auth and SSR-aware browser client.",
+      "Added: middleware and client AuthGate so /app requires a signed-in session.",
+      "Added: optional Settings flow to migrate local IndexedDB hydration data to Supabase with progress feedback.",
+      "Added: Logout in Settings; signup weight field with recommended daily intake and local goal seeding.",
+      "Updated: auth screen layout (corner accents, primary buttons with arrow affordance).",
+    ],
+  },
+  {
     version: "1.1.2",
     date: "2026-04",
     items: [
@@ -56,6 +67,17 @@ export const webChangelog: ChangelogRelease[] = [
 ];
 
 export const cliChangelog: ChangelogRelease[] = [
+  {
+    version: "0.1.5",
+    date: "2026-05",
+    items: [
+      "Added: auth commands (login, logout, whoami) for optional Supabase email/password sign-in.",
+      "Added: sync commands (push, status, enqueue-legacy) for offline-first upload to hydration_logs (source: cli).",
+      "Added: pending outbound queue and idempotent upserts (client_event_id) so cloud rows are not overwritten.",
+      "Changed: local config defaults to ~/.config/hydroloop (override with HYDROLOOP_CONFIG_DIR).",
+      "Updated: add supports -t / --type for drink_type on cloud rows; attempts sync after each add when signed in.",
+    ],
+  },
   {
     version: "0.1.4",
     date: "2026-04",
