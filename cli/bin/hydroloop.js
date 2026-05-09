@@ -11,13 +11,15 @@ import { summaryCommand } from "../commands/summary.js";
 import { recommendCommand } from "../commands/recommend.js";
 import { soundCommand } from "../commands/sound.js";
 import { reminderCommand } from "../commands/reminder.js";
+import { authCommands } from "../commands/auth.js";
+import { syncCommands } from "../commands/sync.js";
 
 const program = new Command();
 
 program
   .name("hydroloop")
   .description("Hydroloop - a developer-friendly hydration tracker for the terminal")
-  .version("0.1.0");
+  .version("0.1.5");
 
 addCommand(program);
 statusCommand(program);
@@ -29,12 +31,16 @@ summaryCommand(program);
 recommendCommand(program);
 soundCommand(program);
 reminderCommand(program);
+authCommands(program);
+syncCommands(program);
 
 program.addHelpText(
   "afterAll",
   `\n${chalk.cyan("Tips:")}\n  Use ${chalk.green(
     "hydroloop start"
-  )} to enable background reminders while you work.\n`
+  )} to enable background reminders while you work.\n` +
+    `  ${chalk.cyan("Cloud (optional):")} ${chalk.green("hydroloop auth login <email>")}` +
+    ` then ${chalk.green("hydroloop sync push")} — local logs queue offline-safe.\n`
 );
 
 program.parseAsync(process.argv);

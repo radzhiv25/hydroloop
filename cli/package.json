@@ -1,6 +1,6 @@
 {
   "name": "hydroloop",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Hydroloop - a developer-friendly hydration tracker for the terminal",
   "type": "module",
   "bin": {
@@ -32,6 +32,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "conf": "^14.0.0",

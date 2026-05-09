@@ -1,7 +1,25 @@
+import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import Conf from "conf";
+import { enqueueRemoteLog } from "./pending-remote-logs.js";
+
+const fromEnv =
+  typeof process.env.HYDROLOOP_CONFIG_DIR === "string"
+    ? process.env.HYDROLOOP_CONFIG_DIR.trim()
+    : "";
+const configDir = fromEnv || path.join(os.homedir(), ".config", "hydroloop");
+
+try {
+  fs.mkdirSync(configDir, { recursive: true });
+} catch {
+  // homedir not writable — Conf may fail on first persist
+}
 
 const config = new Conf({
   projectName: "hydroloop",
+  cwd: configDir,
   defaults: {
     goal: 2500,
     reminderInterval: 45,
@@ -15,6 +33,8 @@ const config = new Conf({
     soundDuration: 5,
     /** JS weekday 0–Sun … 6–Sat; reminders only on these days. */
     reminderDays: [0, 1, 2, 3, 4, 5, 6],
+    /** @type {{ client_event_id: string, happened_at: string, amount_ml: number, drink_type: string }[]} */
+    pending_remote_logs: [],
   },
 });
 
@@ -48,17 +68,25 @@ export function parseAmount(amountInput) {
   return null;
 }
 
-export function logDrink(amountMl) {
+/**
+ * @param {number} amountMl
+ * @param {{ drinkType?: string }} [opts]
+ */
+export function logDrink(amountMl, opts = {}) {
   const store = getStore();
   const todayKey = getTodayKey();
 
   const logs = store.get("logs") ?? [];
   const now = new Date();
+  const drinkType = opts.drinkType?.trim() || "water";
+  const clientEventId = `cli:${randomUUID()}`;
 
   logs.push({
     date: todayKey,
     timestamp: now.toISOString(),
     amountMl,
+    drinkType,
+    clientEventId,
   });
 
   store.set("logs", logs);
@@ -70,7 +98,14 @@ export function logDrink(amountMl) {
 
   updateStreak(store, logs);
 
-  return { todayTotal };
+  enqueueRemoteLog(store, {
+    client_event_id: clientEventId,
+    happened_at: now.toISOString(),
+    amount_ml: amountMl,
+    drink_type: drinkType,
+  });
+
+  return { todayTotal, clientEventId };
 }
 
 function updateStreak(store, logs) {
