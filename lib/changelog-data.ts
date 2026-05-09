@@ -11,6 +11,15 @@ export type ChangelogRelease = {
 
 export const webChangelog: ChangelogRelease[] = [
   {
+    version: "1.2.2",
+    date: "2026-05",
+    items: [
+      "Added: cloud-to-local hydration sync on app load so Supabase logs/settings are read into IndexedDB for dashboard rendering.",
+      "Added: centralized cloud sync module to map hydration_logs into daily local logs, streak history, and weekly summaries.",
+      "Updated: hydration hook load sequence to pull remote data before local reset/persist behavior.",
+    ],
+  },
+  {
     version: "1.2.1",
     date: "2026-05",
     items: [

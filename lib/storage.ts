@@ -122,6 +122,11 @@ export async function getWeeklyHistory(): Promise<WeeklyDaySummary[]> {
   }
 }
 
+export async function setWeeklyHistory(history: WeeklyDaySummary[]): Promise<void> {
+  if (typeof window === "undefined") return;
+  await kvSet(WEEKLY_HISTORY_KEY, JSON.stringify(history));
+}
+
 export async function getDetailedLogHistory(): Promise<DetailedLogHistory> {
   if (typeof window === "undefined") return {};
   try {
@@ -133,7 +138,7 @@ export async function getDetailedLogHistory(): Promise<DetailedLogHistory> {
   }
 }
 
-async function setDetailedLogHistory(history: DetailedLogHistory): Promise<void> {
+export async function setDetailedLogHistory(history: DetailedLogHistory): Promise<void> {
   if (typeof window === "undefined") return;
   await kvSet(DETAILED_LOG_HISTORY_KEY, JSON.stringify(history));
 }

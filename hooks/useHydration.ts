@@ -13,6 +13,7 @@ import {
   getWeeklyHistory,
 } from "@/lib/storage";
 import { getCurrentStreak, getLongestStreak } from "@/lib/hydration";
+import { syncCloudDataToLocal } from "@/lib/cloud-sync";
 
 export function useHydration() {
   const [data, setData] = useState<UserData | null>(null);
@@ -20,6 +21,7 @@ export function useHydration() {
   const [weeklyHistory, setWeeklyHistory] = useState<WeeklyDaySummary[]>([]);
 
   const load = useCallback(async () => {
+    await syncCloudDataToLocal();
     const next = await getOrCreateUserData();
     const reset = ensureDailyReset(next);
     if (JSON.stringify(reset) !== JSON.stringify(next)) {
