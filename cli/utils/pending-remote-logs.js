@@ -22,6 +22,18 @@ export function enqueueRemoteLog(store, row) {
 }
 
 /** @param {import('conf').default} store */
+export function upsertPendingRemoteLog(store, row) {
+  const q = readQueue(store);
+  const idx = q.findIndex((r) => r.client_event_id === row.client_event_id);
+  if (idx === -1) {
+    q.push(row);
+  } else {
+    q[idx] = row;
+  }
+  store.set(QUEUE_KEY, q);
+}
+
+/** @param {import('conf').default} store */
 export function getPendingRemoteLogs(store) {
   return readQueue(store);
 }

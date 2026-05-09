@@ -6,20 +6,24 @@ import { createClient } from "@supabase/supabase-js";
 
 const TOK_ACCESS = "sb_access_token";
 const TOK_REFRESH = "sb_refresh_token";
+const REMOTE_URL = "sb_remote_url";
+const REMOTE_ANON = "sb_remote_anon_key";
 
-export function getSupabaseCredentials() {
+export function getSupabaseCredentials(store) {
   const url =
     process.env.HYDROLOOP_SUPABASE_URL?.trim() ||
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
+    store?.get?.(REMOTE_URL)?.trim?.() ||
     "";
   const anonKey =
     process.env.HYDROLOOP_SUPABASE_ANON_KEY?.trim() ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    store?.get?.(REMOTE_ANON)?.trim?.() ||
     "";
   return { url, anonKey };
 }
 
-export function isRemoteConfigured(creds = getSupabaseCredentials()) {
+export function isRemoteConfigured(store, creds = getSupabaseCredentials(store)) {
   return Boolean(creds.url && creds.anonKey);
 }
 
@@ -28,7 +32,7 @@ export function isRemoteConfigured(creds = getSupabaseCredentials()) {
  * @returns {Promise<{ ok: true, supabase: import('@supabase/supabase-js').SupabaseClient, userId: string } | { ok: false, reason: string }>}
  */
 export async function getAuthedRemoteClient(store) {
-  const { url, anonKey } = getSupabaseCredentials();
+  const { url, anonKey } = getSupabaseCredentials(store);
   if (!url || !anonKey) {
     return { ok: false, reason: "missing_env" };
   }
@@ -96,6 +100,14 @@ export function persistTokensFromSession(store, session) {
 export function clearRemoteSession(store) {
   store.delete(TOK_ACCESS);
   store.delete(TOK_REFRESH);
+}
+
+export function persistRemoteCredentials(store, creds = {}) {
+  const url = typeof creds.url === "string" ? creds.url.trim() : "";
+  const anonKey = typeof creds.anonKey === "string" ? creds.anonKey.trim() : "";
+  if (!url || !anonKey) return;
+  store.set(REMOTE_URL, url);
+  store.set(REMOTE_ANON, anonKey);
 }
 
 export function hasStoredSession(store) {

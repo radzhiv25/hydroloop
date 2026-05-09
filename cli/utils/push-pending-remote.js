@@ -43,7 +43,6 @@ export async function pushPendingRemoteLogs(store, opts = {}) {
 
     const { error } = await supabase.from("hydration_logs").upsert(rows, {
       onConflict: "user_id,client_event_id",
-      ignoreDuplicates: true,
     });
 
     if (error) {

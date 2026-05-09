@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import Conf from "conf";
-import { enqueueRemoteLog } from "./pending-remote-logs.js";
+import { enqueueRemoteLog, upsertPendingRemoteLog } from "./pending-remote-logs.js";
 
 const fromEnv =
   typeof process.env.HYDROLOOP_CONFIG_DIR === "string"
@@ -157,5 +157,48 @@ export function getTodayTotal() {
   return logs
     .filter((log) => log.date === todayKey)
     .reduce((sum, log) => sum + (log.amountMl ?? 0), 0);
+}
+
+/**
+ * Update an existing local log row by client_event_id or most recent item.
+ * Re-queues the same event id for cloud upsert if present.
+ * @param {number} amountMl
+ * @param {{ drinkType?: string, clientEventId?: string }} [opts]
+ * @returns {{ updatedLog: any, todayTotal: number } | null}
+ */
+export function updateDrink(amountMl, opts = {}) {
+  const store = getStore();
+  const logs = store.get("logs") ?? [];
+  if (logs.length === 0) return null;
+
+  const clientEventId = opts.clientEventId?.trim();
+  const targetIndex =
+    clientEventId != null && clientEventId.length > 0
+      ? logs.findIndex((log) => log.clientEventId === clientEventId)
+      : logs.length - 1;
+
+  if (targetIndex < 0) return null;
+
+  const existing = logs[targetIndex];
+  const updatedLog = {
+    ...existing,
+    amountMl,
+    drinkType: opts.drinkType?.trim() || existing.drinkType || "water",
+  };
+  logs[targetIndex] = updatedLog;
+  store.set("logs", logs);
+  updateStreak(store, logs);
+
+  if (updatedLog.clientEventId && updatedLog.timestamp) {
+    upsertPendingRemoteLog(store, {
+      client_event_id: updatedLog.clientEventId,
+      happened_at: updatedLog.timestamp,
+      amount_ml: updatedLog.amountMl,
+      drink_type: updatedLog.drinkType || "water",
+    });
+  }
+
+  const todayTotal = getTodayTotal();
+  return { updatedLog, todayTotal };
 }
 
