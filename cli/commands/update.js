@@ -1,15 +1,17 @@
 import chalk from "chalk";
-import { parseAmount, logDrink, getStore } from "../utils/storage.js";
+import { getStore, parseAmount, updateDrink } from "../utils/storage.js";
 import { pushPendingRemoteLogs } from "../utils/push-pending-remote.js";
 
-export function addCommand(program) {
+export function updateCommand(program) {
   program
-    .command("add <amount>")
-    .description("Log water intake (e.g. 250, 500, 1L). Always saved locally; cloud upload is best-effort.")
-    .option("-t, --type <type>", "Drink type for cloud row (default: water)", "water")
+    .command("update <amount>")
+    .description(
+      "Update a previously logged drink amount (defaults to most recent log; local-first with cloud sync)."
+    )
+    .option("--id <clientEventId>", "Specific log id to update (clientEventId)")
+    .option("-t, --type <type>", "Update drink type for the same row")
     .action(async (amountInput, opts) => {
       const amountMl = parseAmount(amountInput);
-
       if (amountMl == null || amountMl <= 0) {
         console.error(
           chalk.red("Invalid amount. Use values like 250, 500, 750ml or 1L.")
@@ -18,11 +20,28 @@ export function addCommand(program) {
         return;
       }
 
-      const { todayTotal } = logDrink(amountMl, { drinkType: opts.type });
+      const result = updateDrink(amountMl, {
+        clientEventId: opts.id,
+        drinkType: opts.type,
+      });
+
+      if (!result) {
+        const msg = opts.id
+          ? `No log found for id: ${opts.id}`
+          : "No logs found to update. Use hydroloop add <amount> first.";
+        console.error(chalk.red(msg));
+        process.exitCode = 1;
+        return;
+      }
+
       const store = getStore();
       const goal = store.get("goal") ?? 2500;
+      const { updatedLog, todayTotal } = result;
 
-      console.log(`${chalk.cyan("💧 Added")} ${chalk.green(`${amountMl}ml`)}`);
+      console.log(
+        `${chalk.cyan("✏️ Updated")} ${chalk.green(`${updatedLog.amountMl}ml`)} ` +
+          chalk.dim(`(${updatedLog.clientEventId || "legacy local entry"})`)
+      );
       console.log(
         `${chalk.bold("Today's total:")} ${chalk.green(
           `${todayTotal}ml`
@@ -49,4 +68,3 @@ export function addCommand(program) {
       }
     });
 }
-

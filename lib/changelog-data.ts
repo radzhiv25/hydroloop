@@ -11,6 +11,34 @@ export type ChangelogRelease = {
 
 export const webChangelog: ChangelogRelease[] = [
   {
+    version: "1.2.2",
+    date: "2026-05",
+    items: [
+      "Hydroloop now syncs Supabase hydration data back into local IndexedDB on app load so dashboard reads reflect cloud writes (including CLI activity), while signup/auth flows use a canonical app URL for redirects and handle duplicate-username plus `unexpected_failure` database responses with clearer user-facing error messages.",
+    ],
+  },
+  {
+    version: "1.2.1",
+    date: "2026-05",
+    items: [
+      "Added: Settings -> Connect CLI section to generate one-time CLI login tokens and copy them quickly.",
+      "Added: /api/cli/auth/token and /api/cli/auth/exchange route handlers for secure token-based CLI session handoff.",
+      "Changed: replaced middleware convention with proxy.ts to align with Next.js 16 file convention.",
+      "Fixed: /auth static prerender by wrapping search-params usage under Suspense in app/auth/page.tsx.",
+    ],
+  },
+  {
+    version: "1.2.0",
+    date: "2026-05",
+    items: [
+      "Added: Supabase authentication (email/password and Google) with /auth and SSR-aware browser client.",
+      "Added: middleware and client AuthGate so /app requires a signed-in session.",
+      "Added: optional Settings flow to migrate local IndexedDB hydration data to Supabase with progress feedback.",
+      "Added: Logout in Settings; signup weight field with recommended daily intake and local goal seeding.",
+      "Updated: auth screen layout (corner accents, primary buttons with arrow affordance).",
+    ],
+  },
+  {
     version: "1.1.2",
     date: "2026-04",
     items: [
@@ -56,6 +84,34 @@ export const webChangelog: ChangelogRelease[] = [
 ];
 
 export const cliChangelog: ChangelogRelease[] = [
+  {
+    version: "0.1.7",
+    date: "2026-05",
+    items: [
+      "Added: update command to edit the latest or a specific local hydration entry (with --id).",
+      "Added: token-based auth login flow (hydroloop auth login --token <token>) sourced from the web app.",
+      "Changed: remote queue sync now upserts conflicted rows so updated entries can propagate to cloud.",
+      "Updated: help/docs for token login flow and CLI-cloud sync usage.",
+    ],
+  },
+  {
+    version: "0.1.6",
+    date: "2026-05",
+    items: [
+      "Fixed: package.json bin path for npm 11+ validators (relative path without `./` — avoids bin being stripped at publish time).",
+    ],
+  },
+  {
+    version: "0.1.5",
+    date: "2026-05",
+    items: [
+      "Added: auth commands (login, logout, whoami) for optional Supabase email/password sign-in.",
+      "Added: sync commands (push, status, enqueue-legacy) for offline-first upload to hydration_logs (source: cli).",
+      "Added: pending outbound queue and idempotent upserts (client_event_id) so cloud rows are not overwritten.",
+      "Changed: local config defaults to ~/.config/hydroloop (override with HYDROLOOP_CONFIG_DIR).",
+      "Updated: add supports -t / --type for drink_type on cloud rows; attempts sync after each add when signed in.",
+    ],
+  },
   {
     version: "0.1.4",
     date: "2026-04",

@@ -1,11 +1,14 @@
 import { SplashGate } from "@/components/shared/splash-gate";
+import { AuthGate } from "@/components/auth/auth-gate";
 import { MainPage } from "@/screens/main";
 
 export default function AppPage() {
   return (
-    <SplashGate>
-      <MainPage />
-    </SplashGate>
+    <AuthGate>
+      <SplashGate>
+        <MainPage />
+      </SplashGate>
+    </AuthGate>
   );
 }
 

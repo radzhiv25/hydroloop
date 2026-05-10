@@ -40,6 +40,24 @@ hydroloop add 250        # 250ml
 hydroloop add 500ml      # 500ml
 hydroloop add 1L         # 1000ml
 hydroloop add 1.5L       # 1500ml
+
+# Update an existing log
+hydroloop update 300                # updates most recent log
+hydroloop update 300 --id cli:...   # updates a specific log id
+```
+
+### Cloud Sync Login (Token)
+
+```bash
+# 1) In Hydroloop web app settings, generate a CLI token
+# 2) Login from terminal
+hydroloop auth login --token <token>
+
+# Check login
+hydroloop auth whoami
+
+# Upload queued logs
+hydroloop sync push
 ```
 
 ### Viewing Progress

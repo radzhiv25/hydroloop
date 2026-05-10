@@ -1,7 +1,25 @@
+import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import Conf from "conf";
+import { enqueueRemoteLog, upsertPendingRemoteLog } from "./pending-remote-logs.js";
+
+const fromEnv =
+  typeof process.env.HYDROLOOP_CONFIG_DIR === "string"
+    ? process.env.HYDROLOOP_CONFIG_DIR.trim()
+    : "";
+const configDir = fromEnv || path.join(os.homedir(), ".config", "hydroloop");
+
+try {
+  fs.mkdirSync(configDir, { recursive: true });
+} catch {
+  // homedir not writable — Conf may fail on first persist
+}
 
 const config = new Conf({
   projectName: "hydroloop",
+  cwd: configDir,
   defaults: {
     goal: 2500,
     reminderInterval: 45,
@@ -15,6 +33,8 @@ const config = new Conf({
     soundDuration: 5,
     /** JS weekday 0–Sun … 6–Sat; reminders only on these days. */
     reminderDays: [0, 1, 2, 3, 4, 5, 6],
+    /** @type {{ client_event_id: string, happened_at: string, amount_ml: number, drink_type: string }[]} */
+    pending_remote_logs: [],
   },
 });
 
@@ -48,17 +68,25 @@ export function parseAmount(amountInput) {
   return null;
 }
 
-export function logDrink(amountMl) {
+/**
+ * @param {number} amountMl
+ * @param {{ drinkType?: string }} [opts]
+ */
+export function logDrink(amountMl, opts = {}) {
   const store = getStore();
   const todayKey = getTodayKey();
 
   const logs = store.get("logs") ?? [];
   const now = new Date();
+  const drinkType = opts.drinkType?.trim() || "water";
+  const clientEventId = `cli:${randomUUID()}`;
 
   logs.push({
     date: todayKey,
     timestamp: now.toISOString(),
     amountMl,
+    drinkType,
+    clientEventId,
   });
 
   store.set("logs", logs);
@@ -70,7 +98,14 @@ export function logDrink(amountMl) {
 
   updateStreak(store, logs);
 
-  return { todayTotal };
+  enqueueRemoteLog(store, {
+    client_event_id: clientEventId,
+    happened_at: now.toISOString(),
+    amount_ml: amountMl,
+    drink_type: drinkType,
+  });
+
+  return { todayTotal, clientEventId };
 }
 
 function updateStreak(store, logs) {
@@ -122,5 +157,48 @@ export function getTodayTotal() {
   return logs
     .filter((log) => log.date === todayKey)
     .reduce((sum, log) => sum + (log.amountMl ?? 0), 0);
+}
+
+/**
+ * Update an existing local log row by client_event_id or most recent item.
+ * Re-queues the same event id for cloud upsert if present.
+ * @param {number} amountMl
+ * @param {{ drinkType?: string, clientEventId?: string }} [opts]
+ * @returns {{ updatedLog: any, todayTotal: number } | null}
+ */
+export function updateDrink(amountMl, opts = {}) {
+  const store = getStore();
+  const logs = store.get("logs") ?? [];
+  if (logs.length === 0) return null;
+
+  const clientEventId = opts.clientEventId?.trim();
+  const targetIndex =
+    clientEventId != null && clientEventId.length > 0
+      ? logs.findIndex((log) => log.clientEventId === clientEventId)
+      : logs.length - 1;
+
+  if (targetIndex < 0) return null;
+
+  const existing = logs[targetIndex];
+  const updatedLog = {
+    ...existing,
+    amountMl,
+    drinkType: opts.drinkType?.trim() || existing.drinkType || "water",
+  };
+  logs[targetIndex] = updatedLog;
+  store.set("logs", logs);
+  updateStreak(store, logs);
+
+  if (updatedLog.clientEventId && updatedLog.timestamp) {
+    upsertPendingRemoteLog(store, {
+      client_event_id: updatedLog.clientEventId,
+      happened_at: updatedLog.timestamp,
+      amount_ml: updatedLog.amountMl,
+      drink_type: updatedLog.drinkType || "water",
+    });
+  }
+
+  const todayTotal = getTodayTotal();
+  return { updatedLog, todayTotal };
 }
 

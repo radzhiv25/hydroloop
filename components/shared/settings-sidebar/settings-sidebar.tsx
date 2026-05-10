@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UserData, ColorPaletteId } from "@/lib/types";
-import { clearAllData } from "@/lib/storage";
+import { clearAllData, getDetailedLogHistory, getUserData } from "@/lib/storage";
 import {
   MIN_DAILY_GOAL,
   MAX_DAILY_GOAL,
@@ -39,8 +40,10 @@ import { MEASURED_BOTTLE_TIP } from "@/constants";
 import { normalizeReminderDays } from "@/lib/reminder-weekdays";
 import { uploadSoundToCloudinary } from "@/lib/cloudinary";
 import { playReminderSoundForDuration } from "@/hooks/useReminder";
-import { Trash2, Palette, Volume2, X, Upload, Loader2 } from "lucide-react";
+import { Trash2, Palette, Volume2, X, Upload, Loader2, KeyRound, Copy, Check } from "lucide-react";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { supabase } from "@/lib/supabase-client";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -95,6 +98,7 @@ export function SettingsSidebar({
   onLiveReminderUpdate,
   onDataCleared,
 }: SettingsSidebarProps) {
+  const router = useRouter();
   const { register, handleSubmit, setValue, watch, reset } = useForm<FormValues>(
     {
       defaultValues: data
@@ -126,6 +130,15 @@ export function SettingsSidebar({
   const [soundUploadError, setSoundUploadError] = useState<string | null>(null);
   const [showCustomGoal, setShowCustomGoal] = useState(false);
   const [newCustomDrink, setNewCustomDrink] = useState("");
+  const [hasMigratableData, setHasMigratableData] = useState(false);
+  const [isCheckingMigration, setIsCheckingMigration] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationProgress, setMigrationProgress] = useState(0);
+  const [migrationDone, setMigrationDone] = useState(false);
+  const [cliToken, setCliToken] = useState<string | null>(null);
+  const [cliTokenExpiresAt, setCliTokenExpiresAt] = useState<string | null>(null);
+  const [isGeneratingCliToken, setIsGeneratingCliToken] = useState(false);
+  const [copiedCliToken, setCopiedCliToken] = useState(false);
   const previewStopRef = useRef<(() => void) | null>(null);
   const skipSoundOnNextChangeRef = useRef(false);
   const reminderInterval = watch("reminder_interval");
@@ -215,6 +228,183 @@ export function SettingsSidebar({
       return () => clearTimeout(t);
     }
   }, [open, data, reset]);
+
+  useEffect(() => {
+    if (!open) return;
+    let mounted = true;
+    void (async () => {
+      setIsCheckingMigration(true);
+      try {
+        const [current, detailed] = await Promise.all([getUserData(), getDetailedLogHistory()]);
+        if (!mounted) return;
+        const hasCurrent =
+          !!current &&
+          (current.logs.length > 0 ||
+            current.water_consumed > 0 ||
+            current.num_times_consumed > 0 ||
+            Boolean(current.name?.trim()) ||
+            Boolean(current.profileImage?.trim()));
+        const hasDetailed = Object.values(detailed).some((logs) => logs.length > 0);
+        setHasMigratableData(hasCurrent || hasDetailed);
+      } finally {
+        if (mounted) setIsCheckingMigration(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [open]);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(error.message || "Failed to logout");
+      return;
+    }
+    toast.success("Logged out");
+    onOpenChange(false);
+    router.replace("/auth");
+  };
+
+  const handleMigrateToCloud = async () => {
+    if (isMigrating) return;
+    setIsMigrating(true);
+    setMigrationDone(false);
+    setMigrationProgress(5);
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error("Please login again before migration.");
+      }
+
+      setMigrationProgress(15);
+      const [current, detailed] = await Promise.all([getUserData(), getDetailedLogHistory()]);
+
+      setMigrationProgress(35);
+      if (current) {
+        const settingsPayload = {
+          user_id: user.id,
+          reminder_interval_mins: current.reminder_interval,
+          reminder_days: current.reminder_days ?? DEFAULT_REMINDER_DAYS,
+          time_span_start: `${current.time_span.start}:00`,
+          time_span_end: `${current.time_span.end}:00`,
+          daily_goal_ml: current.daily_goal,
+          chart_type: current.chart_type ?? DEFAULT_CHART_TYPE,
+          color_palette: current.color_palette ?? DEFAULT_COLOR_PALETTE,
+          custom_chart_colors: current.custom_chart_colors ?? {},
+          custom_drink_presets: current.custom_drink_presets ?? [],
+        };
+        const { error: settingsError } = await supabase.from("user_settings").upsert(settingsPayload);
+        if (settingsError) throw settingsError;
+      }
+
+      const logRows: Array<{
+        user_id: string;
+        happened_at: string;
+        amount_ml: number;
+        drink_type: string;
+        source: "web";
+        client_event_id: string;
+      }> = [];
+
+      const buildRowsForDate = (
+        date: string,
+        logs: Array<{ time: string; amount: number; drinkType?: string }>,
+        sourceLabel: "history" | "today"
+      ) => {
+        logs.forEach((entry, index) => {
+          const hhmm = entry.time?.slice(0, 5) || "12:00";
+          const stamp = new Date(`${date}T${hhmm}:00`);
+          const iso = Number.isNaN(stamp.getTime()) ? new Date(`${date}T12:00:00`).toISOString() : stamp.toISOString();
+          logRows.push({
+            user_id: user.id,
+            happened_at: iso,
+            amount_ml: entry.amount,
+            drink_type: entry.drinkType?.trim() || "water",
+            source: "web",
+            client_event_id: `legacy:${sourceLabel}:${date}:${hhmm}:${entry.amount}:${entry.drinkType ?? "water"}:${index}`,
+          });
+        });
+      };
+
+      Object.entries(detailed).forEach(([date, logs]) => buildRowsForDate(date, logs, "history"));
+      if (current?.logs?.length) {
+        buildRowsForDate(current.date, current.logs, "today");
+      }
+
+      setMigrationProgress(55);
+      if (logRows.length > 0) {
+        const chunkSize = 200;
+        for (let i = 0; i < logRows.length; i += chunkSize) {
+          const chunk = logRows.slice(i, i + chunkSize);
+          const { error: logsError } = await supabase
+            .from("hydration_logs")
+            .upsert(chunk, { onConflict: "user_id,client_event_id", ignoreDuplicates: true });
+          if (logsError) throw logsError;
+          const ratio = (i + chunk.length) / logRows.length;
+          setMigrationProgress(Math.min(90, 55 + Math.floor(ratio * 35)));
+        }
+
+        const sortedDates = [...new Set(logRows.map((row) => row.happened_at.slice(0, 10)))].sort();
+        if (sortedDates.length > 0) {
+          const { error: recomputeError } = await supabase.rpc("recompute_hydration_daily", {
+            p_user_id: user.id,
+            p_from: sortedDates[0],
+            p_to: sortedDates[sortedDates.length - 1],
+          });
+          if (recomputeError) throw recomputeError;
+        }
+      }
+
+      setMigrationProgress(100);
+      setMigrationDone(true);
+      toast.success("Migration completed");
+      setHasMigratableData(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Migration failed";
+      toast.error(message);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const handleGenerateCliToken = async () => {
+    if (isGeneratingCliToken) return;
+    setIsGeneratingCliToken(true);
+    setCopiedCliToken(false);
+
+    try {
+      const response = await fetch("/api/cli/auth/token", { method: "POST" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.token) {
+        throw new Error(payload?.error || `Failed to generate token (${response.status})`);
+      }
+      setCliToken(payload.token);
+      setCliTokenExpiresAt(payload.expiresAt ?? null);
+      toast.success("CLI token generated (valid for ~10 minutes)");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to generate CLI token";
+      toast.error(message);
+    } finally {
+      setIsGeneratingCliToken(false);
+    }
+  };
+
+  const handleCopyCliToken = async () => {
+    if (!cliToken) return;
+    try {
+      await navigator.clipboard.writeText(cliToken);
+      setCopiedCliToken(true);
+      setTimeout(() => setCopiedCliToken(false), 1200);
+      toast.success("CLI token copied");
+    } catch {
+      toast.error("Could not copy token");
+    }
+  };
 
   const onSubmit = (values: FormValues) => {
     const v = values;
@@ -708,6 +898,78 @@ export function SettingsSidebar({
             </DialogContent>
           </Dialog>
 
+          {!isCheckingMigration && hasMigratableData && (
+            <div className="border-t border-border pt-6">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">
+                Cloud migration
+              </p>
+              <p className="mb-3 text-[11px] text-muted-foreground">
+                Local IndexedDB data found. Migrate it to Supabase.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleMigrateToCloud}
+                disabled={isMigrating}
+              >
+                {isMigrating ? "Migrating..." : "Migrate local data"}
+              </Button>
+              {(isMigrating || migrationDone) && (
+                <div className="mt-3 space-y-1.5">
+                  <div className="h-2 w-full overflow-hidden rounded bg-blue-100">
+                    <div
+                      className="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${migrationProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-blue-600">
+                    {migrationDone ? "Migration complete (100%)" : `Migrating... ${migrationProgress}%`}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="border-t border-border pt-6">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">
+              Connect CLI
+            </p>
+            <p className="mb-3 text-[11px] text-muted-foreground">
+              Generate a one-time token and run <span className="font-mono">hydroloop auth login --token &lt;token&gt;</span>.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGenerateCliToken}
+                disabled={isGeneratingCliToken}
+              >
+                <KeyRound className="mr-2 h-4 w-4" />
+                {isGeneratingCliToken ? "Generating..." : "Generate CLI token"}
+              </Button>
+              {cliToken && (
+                <Button type="button" variant="outline" onClick={handleCopyCliToken}>
+                  {copiedCliToken ? (
+                    <Check className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Copy className="mr-2 h-4 w-4" />
+                  )}
+                  {copiedCliToken ? "Copied" : "Copy token"}
+                </Button>
+              )}
+            </div>
+            {cliToken && (
+              <div className="mt-3 rounded-md border border-border bg-muted/30 p-2">
+                <p className="break-all font-mono text-[11px]">{cliToken}</p>
+                {cliTokenExpiresAt && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Expires: {new Date(cliTokenExpiresAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="border-t border-border pt-6">
             <p className="mb-2 text-xs font-medium text-muted-foreground">
               Want to remove all data?
@@ -732,12 +994,17 @@ export function SettingsSidebar({
               Clear all data
             </Button>
           </div>
-          <div className="flex shrink-0 gap-2 border-t border-border pt-6">
-            <Button type="submit">
-              Save
-            </Button>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancel
+          <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border pt-6">
+            <div className="flex items-center gap-2">
+              <Button type="submit">
+                Save
+              </Button>
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+            </div>
+            <Button variant="outline" type="button" onClick={handleLogout}>
+              Logout
             </Button>
           </div>
       </form>
