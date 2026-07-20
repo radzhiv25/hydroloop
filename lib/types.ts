@@ -3,6 +3,8 @@ export type WaterLogEntry = {
   amount: number; // ml
   /** drink type id: water, tea, coffee, other, or custom name */
   drinkType?: string;
+  /** Cloud id used for direct Supabase lifecycle operations. */
+  clientEventId?: string;
 };
 
 /** Date-indexed historical detailed logs (YYYY-MM-DD -> entry list). */
