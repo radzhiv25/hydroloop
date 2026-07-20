@@ -50,10 +50,19 @@ From your local project directory:
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+### Local-first contributor mode
+
+If you do not add Supabase env vars, Hydroloop still runs in local-first mode:
+
+- hydration tracking works locally
+- auth and cloud sync stay disabled
+- custom sound upload stays disabled unless Cloudinary is configured
 
 ### CLI
 
@@ -124,8 +133,17 @@ hydroloop/
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
+
+### Environment notes
+
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` enable auth and cloud sync
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` enable custom reminder sound uploads
+- `SUPABASE_SERVICE_ROLE_KEY` is deployment-only and should stay in your hosting secrets, not in git
+
+See `CONTRIBUTING.md` for the contributor workflow and local setup modes.
 
 ```bash
 # Run CLI locally
