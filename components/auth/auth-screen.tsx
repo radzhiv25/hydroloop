@@ -81,6 +81,14 @@ function getSignupErrorMessage(error: unknown) {
   return maybeMessage || "Signup failed"
 }
 
+function requireSupabaseClient() {
+  const client = getSupabaseBrowserClient()
+  if (!client) {
+    throw new Error("Cloud auth is not configured in this environment.")
+  }
+  return client
+}
+
 function AuthSubmitButton({ label, disabled = false }: AuthSubmitButtonProps) {
   const [hovered, setHovered] = useState(false)
 
@@ -375,7 +383,8 @@ export function AuthScreen() {
       weight_kg?: number | null
     }
   ) {
-    await supabase.from("profiles").upsert({
+    const client = requireSupabaseClient()
+    await client.from("profiles").upsert({
       id: userId,
       display_name: payload.display_name ?? null,
       username: payload.username ?? null,
@@ -386,7 +395,8 @@ export function AuthScreen() {
   async function usernameExists(username: string) {
     const clean = username.trim()
     if (!clean) return false
-    const { data, error } = await supabase
+    const client = requireSupabaseClient()
+    const { data, error } = await client
       .from("profiles")
       .select("id")
       .ilike("username", clean)
