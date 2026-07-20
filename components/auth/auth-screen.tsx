@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { supabase } from "@/lib/supabase-client"
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase-client"
 import { getOrCreateUserData, saveUserData } from "@/lib/storage"
 import { MAX_DAILY_GOAL, MIN_DAILY_GOAL } from "@/constants/hydration"
 
@@ -335,6 +335,8 @@ function IllustrationPanel() {
 export function AuthScreen() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const supabase = getSupabaseBrowserClient()
+  const authEnabled = isSupabaseConfigured()
   const [loading, setLoading] = useState(false)
   const [loginData, setLoginData] = useState<LoginFormData>({
     email: "",
@@ -353,6 +355,7 @@ export function AuthScreen() {
   const nextPath = useMemo(() => searchParams.get("next") || "/app", [searchParams])
 
   useEffect(() => {
+    if (!supabase) return
     let mounted = true
     void (async () => {
       const { data } = await supabase.auth.getSession()
@@ -362,7 +365,7 @@ export function AuthScreen() {
     return () => {
       mounted = false
     }
-  }, [nextPath, router])
+  }, [nextPath, router, supabase])
 
   async function upsertProfileFromUser(
     userId: string,
@@ -394,6 +397,11 @@ export function AuthScreen() {
   }
 
   const handleGoogleSignin = async () => {
+    if (!supabase) {
+      toast.error("Cloud auth is not configured in this environment.")
+      return
+    }
+
     setLoading(true)
     const redirectTo = `${getAppBaseUrl()}/auth?next=${encodeURIComponent(nextPath)}`
     const { error } = await supabase.auth.signInWithOAuth({
@@ -408,6 +416,10 @@ export function AuthScreen() {
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!supabase) {
+      toast.error("Cloud auth is not configured in this environment.")
+      return
+    }
     try {
       setLoading(true)
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -437,6 +449,11 @@ export function AuthScreen() {
 
   const handleSignup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (!supabase) {
+      toast.error("Cloud auth is not configured in this environment.")
+      return
+    }
 
     if (!signupData.acceptedTerms) {
       toast.error("Please accept the terms and privacy policy")
@@ -542,6 +559,12 @@ export function AuthScreen() {
               </p>
             </div>
 
+            {!authEnabled ? (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+                Cloud auth is disabled in this local environment. Add Supabase env vars to test login and sync flows.
+              </div>
+            ) : null}
+
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid h-10 w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
@@ -550,7 +573,7 @@ export function AuthScreen() {
 
               <TabsContent value="login" className="mt-4">
                 <LoginForm
-                  loading={loading}
+                  loading={loading || !authEnabled}
                   onSubmit={handleLogin}
                   onGoogle={handleGoogleSignin}
                   value={loginData}
@@ -560,7 +583,7 @@ export function AuthScreen() {
 
               <TabsContent value="signup" className="mt-4">
                 <SignupForm
-                  loading={loading}
+                  loading={loading || !authEnabled}
                   onSubmit={handleSignup}
                   onGoogle={handleGoogleSignin}
                   value={signupData}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase-client";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase-client";
 
 type AuthGateProps = {
   children: React.ReactNode;
@@ -11,10 +11,17 @@ type AuthGateProps = {
 export function AuthGate({ children }: AuthGateProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(!isSupabaseConfigured());
 
   useEffect(() => {
     let mounted = true;
+    const supabase = getSupabaseBrowserClient();
+
+    if (!supabase) {
+      return () => {
+        mounted = false;
+      };
+    }
 
     void (async () => {
       const { data, error } = await supabase.auth.getUser();
