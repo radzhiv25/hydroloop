@@ -3,7 +3,6 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +41,7 @@ import { uploadSoundToCloudinary } from "@/lib/cloudinary";
 import { playReminderSoundForDuration } from "@/hooks/useReminder";
 import { Trash2, Palette, Volume2, X, Upload, Loader2, KeyRound, Copy, Check } from "lucide-react";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { supabase } from "@/lib/supabase-client";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -52,27 +51,25 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-const schema = z.object({
-  name: z.string(),
-  profileImage: z.string(),
-  reminder_interval: z.number().min(5).max(120),
-  reminder_sound: z.string(),
-  custom_sound_url: z.string().optional(),
-  reminder_sound_duration_seconds: z.number().min(MIN_REMINDER_SOUND_DURATION).max(MAX_REMINDER_SOUND_DURATION),
-  time_start: z.string(),
-  time_end: z.string(),
-  reminder_days: z.array(z.number().int().min(0).max(6)).min(1),
-  daily_goal: z.number().min(MIN_DAILY_GOAL).max(MAX_DAILY_GOAL),
-  chart_type: z.enum(["line", "bar", "area", "radar", "radial"]),
-  color_palette: z.string(),
-  custom_water: z.string().optional(),
-  custom_tea: z.string().optional(),
-  custom_coffee: z.string().optional(),
-  custom_other: z.string().optional(),
-  custom_drink_presets: z.array(z.string()).default([]),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = {
+  name: string;
+  profileImage: string;
+  reminder_interval: number;
+  reminder_sound: string;
+  custom_sound_url?: string;
+  reminder_sound_duration_seconds: number;
+  time_start: string;
+  time_end: string;
+  reminder_days: number[];
+  daily_goal: number;
+  chart_type: "line" | "bar" | "area" | "radar" | "radial";
+  color_palette: string;
+  custom_water?: string;
+  custom_tea?: string;
+  custom_coffee?: string;
+  custom_other?: string;
+  custom_drink_presets: string[];
+};
 
 function isPresetGoal(goal: number | undefined): boolean {
   if (goal == null) return true;
@@ -99,6 +96,8 @@ export function SettingsSidebar({
   onDataCleared,
 }: SettingsSidebarProps) {
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
+  const cloudEnabled = isSupabaseConfigured();
   const { register, handleSubmit, setValue, watch, reset } = useForm<FormValues>(
     {
       defaultValues: data
@@ -256,6 +255,11 @@ export function SettingsSidebar({
   }, [open]);
 
   const handleLogout = async () => {
+    if (!supabase) {
+      toast.error("Cloud auth is not configured in this environment.");
+      return;
+    }
+
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error(error.message || "Failed to logout");
@@ -268,6 +272,10 @@ export function SettingsSidebar({
 
   const handleMigrateToCloud = async () => {
     if (isMigrating) return;
+    if (!supabase) {
+      toast.error("Cloud sync is not configured in this environment.");
+      return;
+    }
     setIsMigrating(true);
     setMigrationDone(false);
     setMigrationProgress(5);
@@ -374,6 +382,10 @@ export function SettingsSidebar({
 
   const handleGenerateCliToken = async () => {
     if (isGeneratingCliToken) return;
+    if (!cloudEnabled) {
+      toast.error("Cloud auth is not configured in this environment.");
+      return;
+    }
     setIsGeneratingCliToken(true);
     setCopiedCliToken(false);
 

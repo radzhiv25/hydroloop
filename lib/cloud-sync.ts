@@ -1,5 +1,5 @@
 import type { DetailedLogHistory, UserData, WaterLogEntry, WeeklyDaySummary } from "@/lib/types";
-import { supabase } from "@/lib/supabase-client";
+import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
   getOrCreateUserData,
   saveUserData,
@@ -22,6 +22,7 @@ import { normalizeReminderDays } from "@/lib/reminder-weekdays";
 import { aggregateLogsToRecord } from "@/lib/drink-aggregation";
 
 type RemoteLogRow = {
+  client_event_id: string | null;
   happened_at: string;
   amount_ml: number;
   drink_type: string | null;
@@ -38,6 +39,10 @@ type RemoteSettingsRow = {
   custom_chart_colors: UserData["custom_chart_colors"] | null;
   custom_drink_presets: string[] | null;
 };
+
+type PersistLogResult =
+  | { synced: true; entry: WaterLogEntry }
+  | { synced: false; reason: string };
 
 function toTimeHHMM(isoLike: string) {
   if (!isoLike) return "12:00";
@@ -73,9 +78,101 @@ function toLocalDailyLogs(rows: RemoteLogRow[]) {
       time: toTimeHHMM(row.happened_at),
       amount: Math.round(row.amount_ml),
       drinkType: row.drink_type?.trim() || "water",
+      clientEventId: row.client_event_id ?? undefined,
     });
   });
   return byDate;
+}
+
+function toIsoTimestamp(date: string, time: string) {
+  const hhmm = time?.slice(0, 5) || "12:00";
+  const stamp = new Date(`${date}T${hhmm}:00`);
+  if (!Number.isNaN(stamp.getTime())) {
+    return stamp.toISOString();
+  }
+  return new Date(`${date}T12:00:00`).toISOString();
+}
+
+function createClientEventId(date: string, entry: WaterLogEntry) {
+  const randomPart =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  return `web:${date}:${entry.time}:${entry.amount}:${entry.drinkType ?? "water"}:${randomPart}`;
+}
+
+export async function persistHydrationLogToCloud(
+  date: string,
+  entry: WaterLogEntry
+): Promise<PersistLogResult> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    return { synced: false, reason: "not_configured" };
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { synced: false, reason: "not_signed_in" };
+  }
+
+  const row = {
+    user_id: user.id,
+    happened_at: toIsoTimestamp(date, entry.time),
+    amount_ml: entry.amount,
+    drink_type: entry.drinkType?.trim() || "water",
+    source: "web" as const,
+    client_event_id: createClientEventId(date, entry),
+  };
+
+  const { error } = await supabase
+    .from("hydration_logs")
+    .upsert([row], { onConflict: "user_id,client_event_id", ignoreDuplicates: true });
+
+  if (error) {
+    return { synced: false, reason: error.message };
+  }
+
+  return {
+    synced: true,
+    entry: {
+      ...entry,
+      drinkType: row.drink_type,
+      clientEventId: row.client_event_id,
+    },
+  };
+}
+
+export async function deleteHydrationLogFromCloud(clientEventId: string): Promise<{ synced: boolean; reason?: string }> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    return { synced: false, reason: "not_configured" };
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { synced: false, reason: "not_signed_in" };
+  }
+
+  const { error } = await supabase
+    .from("hydration_logs")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("client_event_id", clientEventId);
+
+  if (error) {
+    return { synced: false, reason: error.message };
+  }
+
+  return { synced: true };
 }
 
 function weeklySummaryFromHistory(history: DetailedLogHistory, dailyGoal: number): WeeklyDaySummary[] {
@@ -93,6 +190,11 @@ function weeklySummaryFromHistory(history: DetailedLogHistory, dailyGoal: number
 }
 
 export async function syncCloudDataToLocal(): Promise<{ synced: boolean; reason?: string }> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    return { synced: false, reason: "not_configured" };
+  }
+
   const {
     data: { user },
     error: userError,
@@ -105,7 +207,7 @@ export async function syncCloudDataToLocal(): Promise<{ synced: boolean; reason?
   const [logsRes, settingsRes, localBase] = await Promise.all([
     supabase
       .from("hydration_logs")
-      .select("happened_at, amount_ml, drink_type")
+      .select("client_event_id, happened_at, amount_ml, drink_type")
       .eq("user_id", user.id)
       .order("happened_at", { ascending: true }),
     supabase

@@ -11,6 +11,13 @@ export type ChangelogRelease = {
 
 export const webChangelog: ChangelogRelease[] = [
   {
+    version: "1.2.3",
+    date: "2026-07",
+    items: [
+      "Changed: web hydration logs now write directly to Supabase on add/delete instead of relying on local-only current-day state, and app-load sync now treats cloud rows as the source of truth for today’s logs so refreshes no longer wipe or resurrect entries unexpectedly.",
+    ],
+  },
+  {
     version: "1.2.2",
     date: "2026-05",
     items: [
