@@ -47,7 +47,15 @@ function ChartContainer({
   >["children"]
 }) {
   const uniqueId = React.useId()
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+  const [chartId, setChartId] = React.useState(
+    id ? `chart-${id}` : undefined
+  )
+
+  React.useEffect(() => {
+    if (!id) {
+      setChartId(`chart-${uniqueId.replace(/:/g, "")}`)
+    }
+  }, [id, uniqueId])
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -60,7 +68,7 @@ function ChartContainer({
         )}
         {...props}
       >
-        <ChartStyle id={chartId} config={config} />
+        {chartId ? <ChartStyle id={chartId} config={config} /> : null}
         <RechartsPrimitive.ResponsiveContainer>
           {children}
         </RechartsPrimitive.ResponsiveContainer>
