@@ -14,7 +14,7 @@
     "README.md"
   ],
   "scripts": {
-    "start": "node ./bin/hydroloop.js",
+    "start": "node init && node ./bin/hydroloop.js",
     "lint": "echo \"No lint configured for CLI yet\""
   },
   "keywords": [
