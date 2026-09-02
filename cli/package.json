@@ -14,7 +14,7 @@
     "README.md"
   ],
   "scripts": {
-    "start": "node ./bin/hydroloop.js",
+    "start": "node init && node ./bin/hydroloop.js",
     "lint": "echo \"No lint configured for CLI yet\""
   },
   "keywords": [
@@ -37,7 +37,7 @@
     "commander": "^12.1.0",
     "conf": "^14.0.0",
     "node-notifier": "^10.0.1",
-    "ora": "^8.0.1",
+    "ora": "^9.4.1",
     "play-sound": "^1.1.6"
   }
 }

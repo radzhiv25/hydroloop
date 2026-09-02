@@ -31,7 +31,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
 !.env.example
 
 # local CLI dev / test config (do not commit)
@@ -46,3 +45,4 @@ next-env.d.ts
 temp_auto_push.bat
 temp_interactive_push.bat
 branch_structure.json
+config.bat
